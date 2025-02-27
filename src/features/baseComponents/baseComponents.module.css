@@ -1,0 +1,22 @@
+.numericalInput {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
+  min-width: 400px;
+}
+
+.numericalInputText {
+  min-width: 300px;
+  text-align: start;
+}
+
+.numericalInputBox {
+  height: 50px;
+  width: 200px;
+}
+
+.selectBox {
+  height: 50px;
+  max-width: 200px;
+}

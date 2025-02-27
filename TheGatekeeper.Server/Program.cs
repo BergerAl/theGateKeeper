@@ -1,0 +1,50 @@
+using TheGateKeeper.Server.RiotsApiService;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddSingleton<IRiotApi, RiotApi>();
+builder.Services.AddHttpClient();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("_myAllowSpecificOrigins",
+        builder =>
+        {
+            builder.WithOrigins("https://localhost:4200")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .SetIsOriginAllowed((x) => true)
+                   .AllowCredentials();
+        });
+});
+builder.Services.AddSignalR();
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+#if !RELEASE
+app.UseDefaultFiles();
+app.UseStaticFiles();
+#endif
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors("_myAllowSpecificOrigins");
+app.UseHttpsRedirection();
+app.UseRouting();
+//app.MapHub<EventHub>("/workpieceEvent");
+app.UseAuthorization();
+
+app.MapControllers();
+
+#if RELEASE
+app.Run();
+#else
+app.Run();
+#endif

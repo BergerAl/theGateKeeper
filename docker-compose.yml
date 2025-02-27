@@ -1,0 +1,41 @@
+services:
+  # mongo:
+  #   image: mongo:latest
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: example-password
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   networks:
+  #     - my-network
+  #   healthcheck:
+  #     test: ["CMD", "mongoadmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 3
+  # the-gate-keeper:
+  #   build:
+  #     dockerfile: TheGatekeeper.Server/Dockerfile
+  #   ports:
+  #     - "8891:80"
+  #   networks:
+  #     - my-network
+  # frontend-runner:
+  #   stdin_open: true
+  #   image: nginx:latest
+  #   build:
+  #     context: .
+  #     dockerfile: src/Dockerfile
+  #   ports:
+  #     - 443:80
+  #   networks:
+  #     - my-network
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
