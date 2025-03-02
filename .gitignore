@@ -10,8 +10,6 @@
 
 # production
 /build
-ProductionSheet.Server/bin/
-ProductionSheet.Server/obj/
 
 # misc
 .DS_Store
@@ -29,3 +27,6 @@ yarn-error.log*
 .dockerignore
 
 TheGateKeeper.Server/wwwroot/
+TheGateKeeper.Server/bin/**/*
+TheGateKeeper.Server/obj/**/*
+*.user
