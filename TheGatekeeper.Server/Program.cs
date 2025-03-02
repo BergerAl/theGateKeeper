@@ -24,10 +24,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-#if !RELEASE
 app.UseDefaultFiles();
 app.UseStaticFiles();
-#endif
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -43,8 +41,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-#if RELEASE
 app.Run();
-#else
-app.Run();
-#endif

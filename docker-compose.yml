@@ -33,6 +33,14 @@ services:
   #   networks:
   #     - my-network
 
+
+  the-gate-keeper:
+    build:
+      dockerfile: TheGatekeeper.Server/Dockerfile
+    ports:
+      - "8891:80"
+    networks:
+      - my-network
 networks:
   my-network:
     driver: bridge
