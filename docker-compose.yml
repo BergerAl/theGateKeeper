@@ -41,6 +41,8 @@ services:
       - api_key
     ports:
       - "8891:80"
+      # - "8891:8890"
+      # - "7234:7234"
     networks:
       - my-network
 

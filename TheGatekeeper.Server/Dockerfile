@@ -40,4 +40,5 @@ RUN dotnet publish "TheGatekeeper.Server/TheGateKeeper.Server.csproj" -c $BUILD_
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# ENTRYPOINT ["dotnet", "TheGateKeeper.Server.dll", "--urls=http://localhost:8891"]
 ENTRYPOINT ["dotnet", "TheGateKeeper.Server.dll"]
