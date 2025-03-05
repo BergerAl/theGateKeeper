@@ -5,7 +5,6 @@ namespace TheGateKeeper.Server.RiotsApiService
     public class RiotApi : IRiotApi
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        public string APIKey = "?api_key=";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
         private readonly string riotSummonerByPuuid = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/";
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
@@ -14,7 +13,7 @@ namespace TheGateKeeper.Server.RiotsApiService
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<IEnumerable<FrontEndInfo>> GetAllRanks()
+        public async Task<IEnumerable<FrontEndInfo>> GetAllRanks(string apiKey)
         {
             try
             {
@@ -24,7 +23,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                 {
                     string userName = Uri.EscapeDataString(item.name);
                     string tag = item.tag;
-                    var url = $"{riotIdByNameAndTag}{userName}/{tag}{APIKey}";
+                    var url = $"{riotIdByNameAndTag}{userName}/{tag}?api_key={apiKey}";
                     var response = await httpClient.GetAsync(url);
                     if (!response.IsSuccessStatusCode)
                     {
@@ -33,7 +32,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                     var data = await response.Content.ReadAsStringAsync();
                     var accountDto = JsonSerializer.Deserialize<AccountDto>(data);
 
-                    url = $"{riotSummonerByPuuid}{accountDto.puuid}{APIKey}";
+                    url = $"{riotSummonerByPuuid}{accountDto.puuid}?api_key={apiKey}";
                     var summonerResponse = await httpClient.GetAsync(url);
                     if (!summonerResponse.IsSuccessStatusCode)
                     {
@@ -42,7 +41,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                     data = await summonerResponse.Content.ReadAsStringAsync();
                     var summonerDto = JsonSerializer.Deserialize<SummonerDto>(data);
 
-                    url = $"{riotLeagueApi}{summonerDto.id}{APIKey}";
+                    url = $"{riotLeagueApi}{summonerDto.id}?api_key={apiKey}";
                     var leagueResponse = await httpClient.GetAsync(url);
                     if (!leagueResponse.IsSuccessStatusCode)
                     {

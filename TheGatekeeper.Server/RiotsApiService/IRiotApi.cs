@@ -2,6 +2,6 @@
 {
     public interface IRiotApi
     {
-        public Task<IEnumerable<FrontEndInfo>> GetAllRanks();
+        public Task<IEnumerable<FrontEndInfo>> GetAllRanks(string apiKey);
     }
 }

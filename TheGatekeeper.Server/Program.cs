@@ -1,6 +1,9 @@
+using Mcrio.Configuration.Provider.Docker.Secrets;
 using TheGateKeeper.Server.RiotsApiService;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddDockerSecrets();
 
 // Add services to the container.
 builder.Services.AddSingleton<IRiotApi, RiotApi>();

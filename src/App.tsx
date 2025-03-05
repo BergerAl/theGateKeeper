@@ -16,26 +16,26 @@ export const App: React.FC = () => {
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(selectCurrentThemeMode)
 
-  useEffect(() => {
-    const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:8891/workpieceEvent")
-      .build();
+  // useEffect(() => {
+  //   const newConnection = new signalR.HubConnectionBuilder()
+  //     .withUrl("http://localhost:8891/workpieceEvent")
+  //     .build();
 
-    // newConnection.on("ReceiveWorkpieceList", (workPieceFileList: WorkpieceStructure[]) => {
-    //   dispatch(setAvailableWorkpieces(workPieceFileList))
-    // });
+  //   // newConnection.on("ReceiveWorkpieceList", (workPieceFileList: WorkpieceStructure[]) => {
+  //   //   dispatch(setAvailableWorkpieces(workPieceFileList))
+  //   // });
 
-    newConnection.start().catch(err => console.error('Error starting connection:', err));
+  //   newConnection.start().catch(err => console.error('Error starting connection:', err));
 
-    setConnection(newConnection);
+  //   setConnection(newConnection);
 
-    return () => {
-      if (connection) {
-        connection.stop();
-      }
-    };
-    // eslint-disable-next-line
-  }, []);
+  //   return () => {
+  //     if (connection) {
+  //       connection.stop();
+  //     }
+  //   };
+  //   // eslint-disable-next-line
+  // }, []);
 
   useEffect(() => {
     dispatch(fetchAllUsers())

@@ -30,3 +30,4 @@ TheGateKeeper.Server/wwwroot/
 TheGateKeeper.Server/bin/**/*
 TheGateKeeper.Server/obj/**/*
 *.user
+api_key

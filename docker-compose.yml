@@ -37,10 +37,17 @@ services:
   the-gate-keeper:
     build:
       dockerfile: TheGatekeeper.Server/Dockerfile
+    secrets:
+      - api_key
     ports:
       - "8891:80"
     networks:
       - my-network
+
+secrets:
+  api_key:
+    file: ./api_key
+
 networks:
   my-network:
     driver: bridge
