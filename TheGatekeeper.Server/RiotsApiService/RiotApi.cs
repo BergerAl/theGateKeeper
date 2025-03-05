@@ -49,7 +49,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                     }
                     data = await leagueResponse.Content.ReadAsStringAsync();
                     var leagueEntryDto = JsonSerializer.Deserialize<LeagueEntryDto[]>(data);
-                    var element = leagueEntryDto.First();
+                    var element = leagueEntryDto.Where(x => x.queueType == "RANKED_SOLO_5x5").First();
                     var frontEndInfo = new FrontEndInfo()
                     {
                         leaguePoints = element.leaguePoints,
@@ -126,6 +126,10 @@ namespace TheGateKeeper.Server.RiotsApiService
                 },
                 new RiotUser() {
                     name = "Joizo",
+                    tag = "EUW"
+                },
+                new RiotUser() {
+                    name = "DönerBoxSchmaus",
                     tag = "EUW"
                 },
             ];
