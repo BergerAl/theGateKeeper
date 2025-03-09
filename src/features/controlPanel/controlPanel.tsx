@@ -23,8 +23,8 @@ export const ControlPanel: React.FC = () => {
             <strong>{"ControlPanel only for presentation purposes"}</strong>
 
             <div>
-                <span >{"Parameters are readonly"}</span>
-                <Switch checked={checked} onChange={handleChange} />
+                {/* <span >{"Parameters are readonly"}</span>
+                <Switch checked={checked} onChange={handleChange} /> */}
                 <span >{"Activate Dark mode"}</span>
                 <Select
                     labelId="selectThemeLabel"

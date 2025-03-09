@@ -9,7 +9,7 @@ export interface ControlPanelState {
 
 const initialState: ControlPanelState = {
   areParametersReadonly: false,
-  selectedTheme: 'light'
+  selectedTheme: 'dark'
 };
 
 export const controlPanelSlice = createSlice({
