@@ -39,6 +39,9 @@ services:
       dockerfile: TheGatekeeper.Server/Dockerfile
     secrets:
       - api_key
+      - MongoDBSettingsConnectionString
+      - MongoDBSettingsUser
+      - MongoDBSettingsPassword
     ports:
       - "8891:80"
       # - "8891:8890"
@@ -49,6 +52,12 @@ services:
 secrets:
   api_key:
     file: ./api_key
+  MongoDBSettingsConnectionString:
+    file: ./mongoDbConnectionString
+  MongoDBSettingsUser:
+    file: ./mongoDbUser
+  MongoDBSettingsPassword:
+    file: ./mongoDbPassword
 
 networks:
   my-network:

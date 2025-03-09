@@ -6,16 +6,14 @@ namespace TheGateKeeper.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TheGateKeeper(IConfiguration configuration, IRiotApi riotApi) : ControllerBase
+    public class TheGateKeeper(IRiotApi riotApi) : ControllerBase
     {
         private readonly IRiotApi _riotApi = riotApi;
-        private readonly ILogger _logger;
-        private readonly string _apiKey = configuration["api_key"];
 
         [HttpGet("getCurrentRanks")]
         public Task<IEnumerable<FrontEndInfo>> GetAllAvailableCycles()
         {
-            return _riotApi.GetAllRanks(_apiKey);
+            return _riotApi.GetAllRanks();
         }
 
         //[HttpGet("allAvailableCycles")]
