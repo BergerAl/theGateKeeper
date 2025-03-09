@@ -1,13 +1,13 @@
 ﻿namespace TheGateKeeper.Server
 {
-    public class AccountDto
+    public class AccountDtoV1
     {
         public string puuid { get; set; } = string.Empty;
         public string gameName { get; set; } = string.Empty;
         public string tagLine { get; set; } = string.Empty;
     }
 
-    public class SummonerDto
+    public class SummonerDtoV1
     {
         public string accountId { get; set; } = string.Empty;
         public int profileIconId { get; set; } = 0;
@@ -17,7 +17,7 @@
         public float summonerLevel { get; set; } = 0;
     }
 
-    public class LeagueEntryDto
+    public class LeagueEntryDtoV1
     {
         public string leagueId { get; set; } = string.Empty;
         public string summonerId { get; set; } = string.Empty;
@@ -46,5 +46,16 @@
     {
         public string name { get; set; }
         public string tag { get; set; }
+    }
+
+    public class RiotErrorCode
+    {
+        public RiotInnerErrorCode status { get; set; }
+    }
+
+    public class RiotInnerErrorCode
+    {
+        public double status_code { get; set; }
+        public string message { get; set; }
     }
 }

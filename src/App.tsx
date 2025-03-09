@@ -3,7 +3,6 @@ import * as signalR from '@microsoft/signalr';
 import './App.css';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { TheGateKeeper } from './TheGateKeeperView';
-import { ControlPanel } from './features/controlPanel/controlPanel';
 import { CombinedContext, User } from './context/contextProvider';
 import { selectCurrentThemeMode } from './features/controlPanel/controlPanelSlice';
 import { ThemeProvider } from '@mui/material';
@@ -57,7 +56,6 @@ export const App: React.FC = () => {
               vibrantTheme.palette.background.paper
         }}>
           <TheGateKeeper />
-          <ControlPanel />
         </div>
       </ThemeProvider>
     </CombinedContext.Provider>

@@ -4,19 +4,25 @@ namespace TheGateKeeper.Server.RiotsApiService
 {
     public class RiotApi : IRiotApi
     {
+        private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
         private readonly string riotSummonerByPuuid = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/";
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
 
-        public RiotApi(IHttpClientFactory httpClientFactory) {
+        public RiotApi(IHttpClientFactory httpClientFactory, ILogger<RiotApi> logger) {
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<FrontEndInfo>> GetAllRanks(string apiKey)
         {
             try
             {
+                if (apiKey == null) {
+                    var apiFilePath = Path.Combine(Directory.GetCurrentDirectory(), "../api_key");
+                    apiKey = File.ReadAllText(apiFilePath);
+                }
                 var responseList = new List<FrontEndInfo>();
                 using var httpClient = _httpClientFactory.CreateClient();
                 foreach (var item in ConstUserList())
@@ -27,10 +33,12 @@ namespace TheGateKeeper.Server.RiotsApiService
                     var response = await httpClient.GetAsync(url);
                     if (!response.IsSuccessStatusCode)
                     {
+                        var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
+                        _logger.LogError($"Error during reading of user info with following error: {errorResponse.status.message}");
                         return [new FrontEndInfo()];
                     }
                     var data = await response.Content.ReadAsStringAsync();
-                    var accountDto = JsonSerializer.Deserialize<AccountDto>(data);
+                    var accountDto = JsonSerializer.Deserialize<AccountDtoV1>(data);
 
                     url = $"{riotSummonerByPuuid}{accountDto.puuid}?api_key={apiKey}";
                     var summonerResponse = await httpClient.GetAsync(url);
@@ -39,7 +47,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                         return [new FrontEndInfo()];
                     }
                     data = await summonerResponse.Content.ReadAsStringAsync();
-                    var summonerDto = JsonSerializer.Deserialize<SummonerDto>(data);
+                    var summonerDto = JsonSerializer.Deserialize<SummonerDtoV1>(data);
 
                     url = $"{riotLeagueApi}{summonerDto.id}?api_key={apiKey}";
                     var leagueResponse = await httpClient.GetAsync(url);
@@ -48,7 +56,7 @@ namespace TheGateKeeper.Server.RiotsApiService
                         return [new FrontEndInfo()];
                     }
                     data = await leagueResponse.Content.ReadAsStringAsync();
-                    var leagueEntryDto = JsonSerializer.Deserialize<LeagueEntryDto[]>(data);
+                    var leagueEntryDto = JsonSerializer.Deserialize<LeagueEntryDtoV1[]>(data);
                     var element = leagueEntryDto.Where(x => x.queueType == "RANKED_SOLO_5x5").First();
                     var frontEndInfo = new FrontEndInfo()
                     {
@@ -65,6 +73,7 @@ namespace TheGateKeeper.Server.RiotsApiService
             }
             catch (Exception e)
             {
+                _logger.LogError($"Error during fetching of users. Exception {e}");
                 return [new FrontEndInfo()];
             }
 

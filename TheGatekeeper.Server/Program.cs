@@ -1,4 +1,5 @@
 using Mcrio.Configuration.Provider.Docker.Secrets;
+using MongoDB.Driver;
 using TheGateKeeper.Server.RiotsApiService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddDockerSecrets();
 
 // Add services to the container.
+builder.Services.AddLogging(builder => builder.AddConsole());
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddHttpClient();
 builder.Services.AddCors(options =>
@@ -19,6 +21,17 @@ builder.Services.AddCors(options =>
                    .SetIsOriginAllowed((x) => true)
                    .AllowCredentials();
         });
+});
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    //builder.Configuration["MongoDBSettings:ConnectionString"]
+    //examplecode
+    const string connectionUri = "";
+    var settings = MongoClientSettings.FromConnectionString(connectionUri);
+    // Set the ServerApi field of the settings object to set the version of the Stable API on the client
+    settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+    // Create a new client and connect to the server
+    return new MongoClient(settings);
 });
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
