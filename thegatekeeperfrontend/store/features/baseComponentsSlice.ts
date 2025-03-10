@@ -1,5 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../../app/store';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 
 export enum SnackBarStatus {
     Ok,
@@ -36,7 +35,7 @@ export interface ViewState {
     frontEndInfo: FrontEndInfo[]
 }
 
-const initialState: ViewState = {
+export const initialState: ViewState = {
     actualSelectedPage: 0,
     snackBarState: { text: "", status: SnackBarStatus.Ok },
     modalDialog: {
@@ -50,9 +49,6 @@ export const viewStateSlice = createSlice({
     name: 'viewState',
     initialState,
     reducers: {
-        setActualSelectedPage: (state, action: PayloadAction<number>) => {
-            state.actualSelectedPage = action.payload;
-        },
         setSnackBarState: (state, action: PayloadAction<SnackBarState>) => {
             state.snackBarState = action.payload;
         },
@@ -87,11 +83,6 @@ export const fetchAllUsers = createAsyncThunk(
     }
   );
 
-export const { setActualSelectedPage, setSnackBarState, setModalDialogState } = viewStateSlice.actions;
-
-export const selectActualSelectedPage = (state: RootState) => state.viewStateSlice.actualSelectedPage;
-export const selectSnackBarState = (state: RootState) => state.viewStateSlice.snackBarState;
-export const selectModalDialog = (state: RootState) => state.viewStateSlice.modalDialog;
-export const selectCurrentUsers = (state: RootState) => state.viewStateSlice.frontEndInfo;
+export const { setSnackBarState, setModalDialogState } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

@@ -61,6 +61,7 @@
         public string rank { get; set; } = string.Empty;
         public int leaguePoints { get; set; } = 0;
         public int playedGames { get; set; } = 0;
+        public string[]? archNemeses { get; set; }
     }
 
     public class RiotUser

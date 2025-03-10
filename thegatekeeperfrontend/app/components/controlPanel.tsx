@@ -1,9 +1,9 @@
-import { useAppSelector } from './../../app/hooks';
 import React from 'react';
-import { selectAreParametersReadonly, selectCurrentThemeMode, setAreParametersReadonly, setThemeMode } from './controlPanelSlice';
 import { useDispatch } from 'react-redux';
 import { Switch, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { themeStyle, themeStylesArray } from '../../context/themes';
+import { useAppSelector } from '@/store/hooks';
+import { selectAreParametersReadonly, selectCurrentThemeMode, setAreParametersReadonly, setThemeMode } from '@/store/features/controlPanelSlice';
 
 export const ControlPanel: React.FC = () => {
     const checked = useAppSelector(selectAreParametersReadonly)

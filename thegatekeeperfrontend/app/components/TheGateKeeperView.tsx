@@ -7,8 +7,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { useAppSelector } from './app/hooks';
-import { selectCurrentUsers } from './features/baseComponents/baseComponentsSlice';
+import { useAppSelector } from '@/store/hooks';
 
 function createUserData(
   name: string,
@@ -20,7 +19,7 @@ function createUserData(
 }
 
 export const TheGateKeeper: React.FC = () => {
-  const users = useAppSelector(selectCurrentUsers)
+  const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
   return (
 
     <TableContainer component={Paper}>

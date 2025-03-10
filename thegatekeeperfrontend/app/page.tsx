@@ -1,20 +1,20 @@
-import { useEffect, useState, useMemo } from 'react';
+"use client"
+import StoreProvider from "./StoreProvider";
 import * as signalR from '@microsoft/signalr';
-import './App.css';
-import { useAppDispatch, useAppSelector } from './app/hooks';
-import { TheGateKeeper } from './TheGateKeeperView';
-import { ControlPanel } from './features/controlPanel/controlPanel';
-import { CombinedContext, User } from './context/contextProvider';
-import { selectCurrentThemeMode } from './features/controlPanel/controlPanelSlice';
-import { ThemeProvider } from '@mui/material';
-import { lightTheme, darkTheme, vibrantTheme } from './context/themes';
-import { fetchAllUsers } from './features/baseComponents/baseComponentsSlice';
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useEffect, useMemo, useState } from "react";
+import { CombinedContext, User } from "@/context/contextProvider";
+import { fetchAllUsers } from "@/store/features/baseComponentsSlice";
+import { ThemeProvider } from "@mui/material";
+import { ControlPanel } from "./components/controlPanel";
+import { TheGateKeeper } from "./components/TheGateKeeperView";
+import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
 
-export const App: React.FC = () => {
+function App() {
   const dispatch = useAppDispatch()
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [user, setUser] = useState<User>({})
-  const theme = useAppSelector(selectCurrentThemeMode)
+  const theme = useAppSelector(state => state.controlPanelSlice.selectedTheme)
 
   // useEffect(() => {
   //   const newConnection = new signalR.HubConnectionBuilder()
@@ -61,5 +61,13 @@ export const App: React.FC = () => {
         </div>
       </ThemeProvider>
     </CombinedContext.Provider>
+  );
+}
+
+export default function Home() {
+  return (
+    <StoreProvider>
+      <App />
+    </StoreProvider>
   );
 }
