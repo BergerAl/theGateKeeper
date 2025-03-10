@@ -40,12 +40,12 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     var players = await _collection.Find(_ => true).ToListAsync();
                     foreach (var player in players)
                     {
-                        var leagueEntryies = await GetLeagueEntryListDto(player.Summoner.id);
-                        if (player.LeagueEntries.Except(leagueEntryies).Count() > 0)
+                        var leagueEntries = await GetLeagueEntryListDto(player.Summoner.id);
+                        if (leagueEntries.Count() > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
                         {
                             _logger.LogInformation($"Updating entries for {player.UserName}");
                             var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == player.UserName && u.Tag == player.Tag);
-                            var update = Builders<PlayerDaoV1>.Update.Set(m => m.LeagueEntries, leagueEntryies);
+                            var update = Builders<PlayerDaoV1>.Update.Set(m => m.LeagueEntries, leagueEntries);
                             _collection.UpdateOne(filter, update);
                         }
                     }
@@ -141,30 +141,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             catch (Exception e)
             {
                 _logger.LogError($"Error during fetching of league information. Exception {e}");
-                return [];
-            }
-        }
-
-        private async Task<FrontEndInfo> GetFilteredLeagueEntryDto(string accoutName, string id)
-        {
-            try
-            {
-                var leagueEntryDto = await GetLeagueEntryListDto(id);
-                var element = leagueEntryDto.Where(x => x.queueType == "RANKED_SOLO_5x5").First();
-                var frontEndInfo = new FrontEndInfo()
-                {
-                    leaguePoints = element.leaguePoints,
-                    name = accoutName,
-                    rank = element.rank,
-                    tier = element.tier,
-                    playedGames = element.wins + element.losses
-                };
-                return frontEndInfo;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Error during fetching of league information. Exception {e}");
-                return new FrontEndInfo();
+                throw;
             }
         }
     }
