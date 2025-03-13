@@ -25,17 +25,17 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="NpmInstall" Inputs="../thegatekeeperfrontend/package.json" Outputs="../thegatekeeperfrontend/node_modules/.install-stamp">
+  <Target Name="NpmInstall" Inputs="../thegatekeeperfrontend/package.json" Outputs="../thegatekeeperfrontend/node_modules/.install-stamp" Condition="'$(Configuration)' == 'Release'">
     <Exec WorkingDirectory="$(FrontEndRoot)" Command="npm ci" Condition="'$(RestorePackagesWithLockFile)' == 'true'" />
 	<Exec WorkingDirectory="$(FrontEndRoot)" Command="npm install" Condition="'$(RestorePackagesWithLockFile)' != 'true'" />
     <Touch Files="../thegatekeeperfrontend/node_modules/.install-stamp" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild">
+  <Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
 	<Exec WorkingDirectory="$(FrontEndRoot)" Command="npm run build" />
   </Target>
 
-  <Target Name="CopyFiles" AfterTargets="NpmRunBuild">
+  <Target Name="CopyFiles" AfterTargets="NpmRunBuild" Condition="'$(Configuration)' == 'Release'">
 	<ItemGroup>
 	  <FrontEnd Include="../thegatekeeperfrontend/out/**/*.*" />
 	</ItemGroup>

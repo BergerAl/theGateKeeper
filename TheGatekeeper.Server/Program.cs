@@ -2,6 +2,7 @@ using Mcrio.Configuration.Provider.Docker.Secrets;
 using MongoDB.Driver;
 using TheGateKeeper.Server.BackgroundWorker;
 using TheGateKeeper.Server.RiotsApiService;
+using TheGateKeeper.Server.StartUpProcedures;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
     // Create a new client and connect to the server
     return new MongoClient(settings);
 });
+builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
