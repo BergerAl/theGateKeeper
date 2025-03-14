@@ -5,11 +5,11 @@ namespace TheGateKeeper.Server.RiotsApiService
     public class RiotApi : IRiotApi
     {
         private readonly ILogger _logger;
-        private readonly IMongoCollection<PlayerDaoV1> _collection;
+        private readonly IMongoCollection<StoredStandingsDtoV1> _collection;
 
         public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger) {
             var database = mongoClient.GetDatabase("gateKeeper");
-            _collection = database.GetCollection<PlayerDaoV1>("players");
+            _collection = database.GetCollection<StoredStandingsDtoV1>("standings");
             _logger = logger;
         }
 
@@ -17,7 +17,8 @@ namespace TheGateKeeper.Server.RiotsApiService
         {
             try
             {
-                return await _collection.GetAllRanksFromCollection().ConfigureAwait(false);
+                var standingsObject = await _collection.Find(_ => true).FirstAsync();
+                return standingsObject.Standings;
             }
             catch (Exception e)
             {

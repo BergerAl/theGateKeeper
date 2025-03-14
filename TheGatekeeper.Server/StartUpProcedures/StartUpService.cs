@@ -1,5 +1,4 @@
 ﻿using MongoDB.Driver;
-using System.IO.Abstractions;
 
 namespace TheGateKeeper.Server.StartUpProcedures
 {
