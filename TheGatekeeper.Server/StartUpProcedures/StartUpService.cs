@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System.IO.Abstractions;
 
 namespace TheGateKeeper.Server.StartUpProcedures
 {
@@ -43,7 +44,19 @@ namespace TheGateKeeper.Server.StartUpProcedures
                     MaxSize = null,
                     MaxDocuments = null
                 });
-            }
+                await _database.CreateCollectionAsync("standings", new CreateCollectionOptions
+                {
+                    Capped = false,
+                    MaxSize = null,
+                    MaxDocuments = null
+                });
+                var collection = _database.GetCollection<StoredStandingsDtoV1>("standings");
+
+                await collection.UpdateOneAsync(
+                    Builders<StoredStandingsDtoV1>.Filter.Empty,
+                    Builders<StoredStandingsDtoV1>.Update.SetOnInsert(doc => doc, new StoredStandingsDtoV1 { Id = "standingstable", Standings = [] }),
+                    new UpdateOptions { IsUpsert = true });
+                }
             catch (MongoCommandException ex)
             {
                 _logger.LogError($"MongoCommandException: {ex}");

@@ -79,4 +79,9 @@
         public double status_code { get; set; }
         public string message { get; set; }
     }
+
+    public class SwapResult
+    {
+        public List<(int OriginalIndex, int NewIndex, FrontEndInfo Item)> Swaps { get; set; }
+    }
 }
