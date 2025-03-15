@@ -56,7 +56,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         }
                     }
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection().ConfigureAwait(false);
-                    await CompareStandings(updatedStandings.ToList()).ConfigureAwait(false);
+                    await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
                     _logger.LogInformation($"BackgorundWorker finished process successfully");
 
@@ -88,7 +88,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var accountDto = await GetAccountDto(userName, tag);
             var summonerDto = await GetSummonerDto(accountDto.puuid);
             var LeagueEntryList = await GetLeagueEntryListDto(summonerDto.id);
-            await _playersCollection.InsertOneAsync(new PlayerDaoV1() { UserName = userName, Tag = tag, Account = accountDto, Summoner = summonerDto, LeagueEntries = LeagueEntryList }).ConfigureAwait(false);
+            await _playersCollection.InsertOneAsync(new PlayerDaoV1() { 
+                UserName = userName, 
+                Tag = tag, 
+                Account = accountDto, 
+                Summoner = summonerDto, 
+                Voting = new Voting() { voteBlockedUntil = DateTime.UtcNow, isBlocked = false },
+                LeagueEntries = LeagueEntryList 
+            }).ConfigureAwait(false);
         }
 
         private async Task<AccountDtoV1> GetAccountDto(string userName, string tag)
@@ -154,7 +161,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task CompareStandings(List<FrontEndInfo> newStandings)
+        private async Task CompareStandings(List<Standings> newStandings)
         {
             try
             {
@@ -166,7 +173,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     return;
                 }
 
-                var swaps = new List<(int OriginalIndex, int NewIndex, FrontEndInfo Item)>();
+                var swaps = new List<(int OriginalIndex, int NewIndex, Standings Item)>();
 
                 // Check each item in the original list
                 for (int i = 0; i < oldStandings.Count(); i++)
@@ -191,7 +198,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 throw;
             }
         }
-        private async Task InsertStandingsTable(List<FrontEndInfo> newStandings)
+        private async Task InsertStandingsTable(List<Standings> newStandings)
         {
             var filter = Builders<StoredStandingsDtoV1>.Filter.Empty;
             var sort = Builders<StoredStandingsDtoV1>.Sort.Ascending(x => x.Id);
@@ -208,7 +215,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task<List<FrontEndInfo>> TryGetStandings()
+        private async Task<List<Standings>> TryGetStandings()
         {
             try
             {
@@ -222,7 +229,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task NotifyDisocrd(List<(int OriginalIndex, int NewIndex, FrontEndInfo Item)> swappedPlayers)
+        private async Task NotifyDisocrd(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers)
         {
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)

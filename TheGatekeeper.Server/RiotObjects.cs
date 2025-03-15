@@ -1,4 +1,6 @@
-﻿namespace TheGateKeeper.Server
+﻿using MongoDB.Bson;
+
+namespace TheGateKeeper.Server
 {
     public class AccountDtoV1
     {
@@ -54,13 +56,24 @@
         }
     }
 
-    public class FrontEndInfo
+    public class VotingCallResult
+    {
+        public bool Success;
+        public string? ErrorMessage = "";
+    }
+
+    public class Standings
     {
         public string name { get; set; } = string.Empty;
         public string tier { get; set; } = string.Empty;
         public string rank { get; set; } = string.Empty;
         public int leaguePoints { get; set; } = 0;
         public int playedGames { get; set; } = 0;
+    }
+
+    public class FrontEndInfo : Standings
+    {
+        public Voting voting { get; set; } = new Voting() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
     }
 
     public class RiotUser
@@ -78,10 +91,5 @@
     {
         public double status_code { get; set; }
         public string message { get; set; }
-    }
-
-    public class SwapResult
-    {
-        public List<(int OriginalIndex, int NewIndex, FrontEndInfo Item)> Swaps { get; set; }
     }
 }

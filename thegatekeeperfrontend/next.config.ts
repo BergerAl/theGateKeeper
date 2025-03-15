@@ -11,6 +11,10 @@ module.exports = (phase, { defaultConfig }) => {
           {
             source: '/api/:path*',
             destination: 'http://localhost:8891/api/:path*',
+          },
+          {
+            source: '/timedOutUserVote/:path*',
+            destination: 'http://localhost:8891/timedOutUserVote/:path*',
           }
         ];
       },

@@ -1,8 +1,10 @@
 using Mcrio.Configuration.Provider.Docker.Secrets;
 using MongoDB.Driver;
+using TheGateKeeper.Server;
 using TheGateKeeper.Server.BackgroundWorker;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.StartUpProcedures;
+using TheGateKeeper.Server.VotingService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Configuration.AddDockerSecrets();
 // Add services to the container.
 builder.Services.AddLogging(builder => builder.AddConsole());
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
+builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddHttpClient();
 #if DEBUG
 builder.Services.AddCors(options =>
@@ -18,7 +21,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("_myAllowSpecificOrigins",
         builder =>
         {
-            builder.WithOrigins("https://localhost:4200")
+            builder.WithOrigins("https://localhost:3000")
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .SetIsOriginAllowed((x) => true)
@@ -40,6 +43,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 });
 builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
+builder.Services.AddHostedService<ScheduledTaskService>();
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -60,7 +64,7 @@ app.UseCors("_myAllowSpecificOrigins");
 # endif
 app.UseHttpsRedirection();
 app.UseRouting();
-//app.MapHub<EventHub>("/workpieceEvent");
+app.MapHub<EventHub>("/timedOutUserVote");
 app.UseAuthorization();
 
 app.MapControllers();

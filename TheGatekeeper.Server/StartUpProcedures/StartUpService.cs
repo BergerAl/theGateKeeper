@@ -51,11 +51,8 @@ namespace TheGateKeeper.Server.StartUpProcedures
                 });
                 var collection = _database.GetCollection<StoredStandingsDtoV1>("standings");
 
-                await collection.UpdateOneAsync(
-                    Builders<StoredStandingsDtoV1>.Filter.Empty,
-                    Builders<StoredStandingsDtoV1>.Update.SetOnInsert(doc => doc, new StoredStandingsDtoV1 { Id = "standingstable", Standings = [] }),
-                    new UpdateOptions { IsUpsert = true });
-                }
+                await collection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = [] });
+            }
             catch (MongoCommandException ex)
             {
                 _logger.LogError($"MongoCommandException: {ex}");

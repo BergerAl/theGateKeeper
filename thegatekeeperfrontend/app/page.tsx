@@ -4,11 +4,13 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { fetchAllUsers } from "@/store/features/baseComponentsSlice";
+import { FrontEndInfo, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
 import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
+import { fetchAllUsers } from "@/store/backEndCalls";
+import { SimpleSnackbar } from "./components/snackBar";
 
 function App() {
   const dispatch = useAppDispatch()
@@ -16,26 +18,26 @@ function App() {
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.controlPanelSlice.selectedTheme)
 
-  // useEffect(() => {
-  //   const newConnection = new signalR.HubConnectionBuilder()
-  //     .withUrl("http://localhost:8891/workpieceEvent")
-  //     .build();
+  useEffect(() => {
+    const newConnection = new signalR.HubConnectionBuilder()
+      .withUrl("/timedOutUserVote")
+      .build();
 
-  //   // newConnection.on("ReceiveWorkpieceList", (workPieceFileList: WorkpieceStructure[]) => {
-  //   //   dispatch(setAvailableWorkpieces(workPieceFileList))
-  //   // });
+    newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfo[]) => {
+      dispatch(updateUsersIfBlocked(frontEndInfo))
+    });
 
-  //   newConnection.start().catch(err => console.error('Error starting connection:', err));
+    newConnection.start().catch(err => console.error('Error starting connection:', err));
 
-  //   setConnection(newConnection);
+    setConnection(newConnection);
 
-  //   return () => {
-  //     if (connection) {
-  //       connection.stop();
-  //     }
-  //   };
-  //   // eslint-disable-next-line
-  // }, []);
+    return () => {
+      if (connection) {
+        connection.stop();
+      }
+    };
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAllUsers())
@@ -56,6 +58,7 @@ function App() {
             theme === 'dark' ? darkTheme.palette.background.paper :
               vibrantTheme.palette.background.paper
         }}>
+          <SimpleSnackbar />
           <TheGateKeeper />
           <ControlPanel />
         </div>

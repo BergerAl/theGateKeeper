@@ -14,7 +14,15 @@ namespace TheGateKeeper.Server
         public string Tag { get; set; }
         public AccountDtoV1 Account { get; set; }
         public SummonerDtoV1 Summoner { get; set; }
+
+        public Voting Voting { get; set; }
         public List<LeagueEntryDtoV1> LeagueEntries { get; set; }
+    }
+
+    public class Voting
+    {
+        public bool isBlocked { get; set; }
+        public DateTime voteBlockedUntil { get; set; }
     }
 
     public class StoredStandingsDtoV1
@@ -22,6 +30,6 @@ namespace TheGateKeeper.Server
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         [BsonRepresentation(BsonType.String)]
         public string Id { get; set; }
-        public List<FrontEndInfo> Standings { get; set; }
+        public List<Standings> Standings { get; set; }
     }
 }

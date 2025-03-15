@@ -7,19 +7,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { useAppSelector } from '@/store/hooks';
-
-function createUserData(
-  name: string,
-  rank: string,
-  tier: string,
-  leaguePoints: number,
-) {
-  return { name, rank, tier, leaguePoints };
-}
+import Button from '@mui/material/Button';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { voteForUser } from '@/store/backEndCalls';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
+  const dispatch = useAppDispatch()
   return (
 
     <TableContainer component={Paper}>
@@ -30,7 +24,8 @@ export const TheGateKeeper: React.FC = () => {
             <TableCell align="right">Tier</TableCell>
             <TableCell align="right">Rank</TableCell>
             <TableCell align="right">LeaguePoints</TableCell>
-            <TableCell align="right">playedGames</TableCell>
+            <TableCell align="right">Played Games</TableCell>
+            <TableCell align="right">VOTE NOW!</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -46,6 +41,7 @@ export const TheGateKeeper: React.FC = () => {
               <TableCell align="right">{row.rank}</TableCell>
               <TableCell align="right">{row.leaguePoints}</TableCell>
               <TableCell align="right">{row.playedGames}</TableCell>
+              <TableCell align="right"><Button onPointerDown={()=> dispatch(voteForUser(row.name))} disabled={row.voting.isBlocked} variant="contained">{"Vote"}</Button></TableCell>
             </TableRow>
           ))}
         </TableBody>
