@@ -50,8 +50,11 @@ namespace TheGateKeeper.Server.StartUpProcedures
                     MaxDocuments = null
                 });
                 var collection = _database.GetCollection<StoredStandingsDtoV1>("standings");
-
-                await collection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = [] });
+                var filter = Builders<StoredStandingsDtoV1>.Filter.Eq("_id", "standingstable");
+                if (!await collection.Find(filter).AnyAsync())
+                {
+                    await collection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = [] });
+                }
             }
             catch (MongoCommandException ex)
             {

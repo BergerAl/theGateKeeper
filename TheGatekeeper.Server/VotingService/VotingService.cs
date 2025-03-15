@@ -19,9 +19,14 @@ namespace TheGateKeeper.Server.VotingService
             try
             {
                 var filter = Builders<PlayerDaoV1>.Filter.Eq(doc => doc.UserName, userName);
-                var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting, new Voting() { isBlocked= true, voteBlockedUntil = DateTime.UtcNow.AddSeconds(30) });
-                await _collection.UpdateOneAsync(filter, update);
-                return new VotingCallResult() { Success = true };
+                var player = await _collection.Find(filter).FirstOrDefaultAsync();
+                if (!player.Voting.isBlocked)
+                {
+                    var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting, new Voting() { isBlocked = true, voteBlockedUntil = DateTime.UtcNow.AddSeconds(30) });
+                    await _collection.UpdateOneAsync(filter, update);
+                    return new VotingCallResult() { Success = true };
+                }
+                return new VotingCallResult() { Success = false, ErrorMessage = $"Voting user {userName} wasn't available, because he is still blocked" };
             }
             catch (Exception e)
             {
