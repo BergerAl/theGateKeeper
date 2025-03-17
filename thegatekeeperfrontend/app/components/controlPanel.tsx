@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { Switch, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Select, MenuItem, SelectChangeEvent, Typography } from '@mui/material';
 import { themeStyle, themeStylesArray } from '../../context/themes';
 import { useAppSelector } from '@/store/hooks';
 import { selectAreParametersReadonly, selectCurrentThemeMode, setAreParametersReadonly, setThemeMode } from '@/store/features/controlPanelSlice';
@@ -20,12 +20,8 @@ export const ControlPanel: React.FC = () => {
     return (
 
         <div style={{ display: 'flex', flexDirection: 'column', position: 'fixed', bottom: '0px' }}>
-            <strong>{"ControlPanel only for presentation purposes"}</strong>
-
             <div>
-                {/* <span >{"Parameters are readonly"}</span>
-                <Switch checked={checked} onChange={handleChange} /> */}
-                <span >{"Activate Dark mode"}</span>
+                <Typography component="span" color="primary" style={{marginRight: '15px'}}>{"Select Theme"}</Typography>
                 <Select
                     labelId="selectThemeLabel"
                     id="selectThemeId"

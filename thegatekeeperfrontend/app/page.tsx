@@ -49,21 +49,23 @@ function App() {
   }), [user])
 
   return (
-    <CombinedContext.Provider value={value}>
-      <ThemeProvider theme={theme === 'light' ? lightTheme :
-        theme === 'dark' ? darkTheme :
-          vibrantTheme}>
-        <div style={{
-          background: theme === 'light' ? lightTheme.palette.background.paper :
-            theme === 'dark' ? darkTheme.palette.background.paper :
-              vibrantTheme.palette.background.paper
-        }}>
-          <SimpleSnackbar />
-          <TheGateKeeper />
-          <ControlPanel />
-        </div>
-      </ThemeProvider>
-    </CombinedContext.Provider>
+    <html lang="en">
+      <body style={{
+        background: theme === 'light' ? lightTheme.palette.background.paper :
+          theme === 'dark' ? darkTheme.palette.background.paper :
+            vibrantTheme.palette.background.paper
+      }}>
+        <CombinedContext.Provider value={value}>
+          <ThemeProvider theme={theme === 'light' ? lightTheme :
+            theme === 'dark' ? darkTheme :
+              vibrantTheme}>
+            <SimpleSnackbar />
+            <TheGateKeeper />
+            <ControlPanel />
+          </ThemeProvider>
+        </CombinedContext.Provider>
+      </body>
+    </html>
   );
 }
 

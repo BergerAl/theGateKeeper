@@ -16,7 +16,7 @@ export const TheGateKeeper: React.FC = () => {
   const dispatch = useAppDispatch()
   return (
 
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} >
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
