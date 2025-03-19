@@ -51,13 +51,15 @@ services:
 
 secrets:
   api_key:
-    file: ./api_key
+    file: ./secrets/api_key
   MongoDBSettingsConnectionString:
-    file: ./mongoDbConnectionString
+    file: ./secrets/mongoDbConnectionString
   MongoDBSettingsUser:
-    file: ./mongoDbUser
+    file: ./secrets/mongoDbUser
   MongoDBSettingsPassword:
-    file: ./mongoDbPassword
+    file: ./secrets/mongoDbPassword
+  DiscordWebhook:
+    file: ./secrets/discordWebhook
 
 networks:
   my-network:

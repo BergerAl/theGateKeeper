@@ -31,9 +31,7 @@ TheGateKeeper.Server/bin/**/*
 TheGateKeeper.Server/obj/**/*
 *.user
 api_key
-mongoDbConnectionString
-mongoDbPassword
-mongoDbUser
+secrets/**
 
 /.pnp
 .pnp.*

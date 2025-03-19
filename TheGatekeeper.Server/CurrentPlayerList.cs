@@ -34,13 +34,9 @@
                     tag = "EUW"
                 },
                 new RiotUser() {
-                    name = "Joizo",
-                    tag = "EUW"
-                },
-                new RiotUser() {
                     name = "DönerBoxSchmaus",
                     tag = "EUW"
-                },
+                }
             ];
         }
     }
