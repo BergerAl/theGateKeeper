@@ -20,9 +20,10 @@ module.exports = (phase, { defaultConfig }) => {
       },
     }
   }
- 
+
   return {
     devIndicators: false,
+    assetPrefix: "/gateKeeper",
     output: 'export'
   }
 }
