@@ -9,7 +9,7 @@ import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
 import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
-import { fetchAllUsers } from "@/store/backEndCalls";
+import { fetchAllUsers, domainUrlPrefix, healthCheck } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("/timedOutUserVote")
+      .withUrl(`${domainUrlPrefix()}/timedOutUserVote`)
       .build();
 
     newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfo[]) => {
@@ -40,6 +40,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    dispatch(healthCheck())
     dispatch(fetchAllUsers())
     // eslint-disable-next-line
   }, []);

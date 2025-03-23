@@ -1,0 +1,46 @@
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using System.IO.Abstractions;
+
+namespace TheGateKeeper.Server.InfrastructureService
+{
+    public class HealthCheck : IHealthCheck
+    {
+        private readonly HttpClient _httpClient;
+        private readonly string _apiKey;
+
+        private readonly string lolStatusApi = "https://europe.api.riotgames.com/lor/status/v1/platform-data?api_key=";
+
+        public HealthCheck(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        {
+            _httpClient = httpClientFactory.CreateClient();
+            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
+        }
+
+        public async Task<HealthCheckResult> CheckHealthAsync(
+            HealthCheckContext context,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Replace with your target URL
+                var response = await _httpClient.GetAsync($"{lolStatusApi}{_apiKey}",
+                    cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return HealthCheckResult.Unhealthy($"URL returned status code {response.StatusCode}");
+
+                }
+
+                return HealthCheckResult.Healthy("Health check was successful");
+
+            }
+            catch (Exception ex)
+            {
+                return HealthCheckResult.Unhealthy(ex.Message);
+            }
+        }
+    }
+}

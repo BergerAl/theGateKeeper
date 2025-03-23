@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, healthCheck, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -76,6 +76,9 @@ export const viewStateSlice = createSlice({
           state.frontEndInfo = action.payload;
         });
         builder.addCase(fetchAllUsers.rejected, (state, action) => {
+            state.snackBarState = {text: action.error.message!, status: SnackBarStatus.Error};
+        });
+        builder.addCase(healthCheck.rejected, (state, action) => {
             state.snackBarState = {text: action.error.message!, status: SnackBarStatus.Error};
         });
         builder.addCase(voteForUser.fulfilled, (state, action) => {

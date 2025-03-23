@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-namespace TheGateKeeper.Server.StartUpProcedures
+namespace TheGateKeeper.Server.InfrastructureService
 {
     public class StartUpService : IHostedService
     {
