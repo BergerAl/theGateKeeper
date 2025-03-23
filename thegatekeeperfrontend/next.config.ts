@@ -23,7 +23,7 @@ module.exports = (phase, { defaultConfig }) => {
 
   return {
     devIndicators: false,
-    assetPrefix: "/gateKeeper",
+    assetPrefix: "/gatekeeper",
     output: 'export'
   }
 }
