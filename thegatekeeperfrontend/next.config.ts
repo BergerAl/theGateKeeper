@@ -22,6 +22,9 @@ module.exports = (phase, { defaultConfig }) => {
   }
 
   return {
+    env: {
+      urlPrefix: "/gatekeeper"
+    },
     devIndicators: false,
     assetPrefix: "/gatekeeper",
     output: 'export'

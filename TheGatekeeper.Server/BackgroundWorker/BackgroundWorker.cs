@@ -23,7 +23,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var database = mongoClient.GetDatabase("gateKeeper");
             _playersCollection = database.GetCollection<PlayerDaoV1>("players");
             _standingsCollection = database.GetCollection<StoredStandingsDtoV1>("standings");
-            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../api_key"));
+            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
             _webhookUrl = configuration["DiscordWebhook"] ?? configuration["Discord:Webhook"];
         }
 
