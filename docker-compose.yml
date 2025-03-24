@@ -42,6 +42,7 @@ services:
       - MongoDBSettingsConnectionString
       - MongoDBSettingsUser
       - MongoDBSettingsPassword
+      - DiscordWebhook
     ports:
       - "8891:80"
       # - "8891:8890"
