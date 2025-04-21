@@ -59,7 +59,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection().ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
-                    _logger.LogInformation($"BackgorundWorker finished process successfully");
+                    _logger.LogInformation($"BackgroundWorker finished process successfully");
 
                 }
                 catch (OperationCanceledException)

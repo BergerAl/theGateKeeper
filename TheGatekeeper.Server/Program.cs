@@ -46,6 +46,10 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 builder.Services.AddHealthChecks()
     .AddCheck<HealthCheck>("Riot Api Health Check", failureStatus: HealthStatus.Unhealthy)
     .AddMongoDb();
+builder.Services.Configure<HostOptions>(hostOptions =>
+{
+    hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
 builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
