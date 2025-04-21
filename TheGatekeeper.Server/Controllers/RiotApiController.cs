@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
@@ -11,6 +12,10 @@ namespace TheGateKeeper.Controllers
     {
         private readonly IRiotApi _riotApi = riotApi;
         private readonly IVotingService _voteService = votingService;
+        private static readonly Regex ApiKeyPattern = new Regex(
+            @"^RGAPI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+);
 
         [HttpGet("getCurrentRanks")]
         public Task<IEnumerable<FrontEndInfo>> GetAllAvailableCycles()
@@ -41,5 +46,23 @@ namespace TheGateKeeper.Controllers
 
         }
 
+        [HttpPost("apiKey")]
+        public IActionResult AddNewApiKey([FromBody] string apiKey)
+        {
+            try
+            {
+                if (ApiKeyPattern.IsMatch(apiKey))
+                {
+                    _riotApi.SetNewApiKey(apiKey);
+                    return Ok($"New api key set");
+                }
+                return BadRequest(new { message = "New api key not set" });
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(new { message = $"Couldn't set new api, because of exception: {e}" });
+            }          
+        }
     }
 }

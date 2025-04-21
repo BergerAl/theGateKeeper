@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
+using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
@@ -13,17 +14,17 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
         private readonly string riotSummonerByPuuid = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/";
-        private readonly string _apiKey;
+        private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
         
-        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi)
         {
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient();
             var database = mongoClient.GetDatabase("gateKeeper");
             _playersCollection = database.GetCollection<PlayerDaoV1>("players");
             _standingsCollection = database.GetCollection<StoredStandingsDtoV1>("standings");
-            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
+            _riotApi = riotApi;
             _webhookUrl = configuration["DiscordWebhook"] ?? configuration["Discord:Webhook"];
         }
 
@@ -102,7 +103,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         {
             try
             {
-                var url = $"{riotIdByNameAndTag}{userName}/{tag}?api_key={_apiKey}";
+                var url = $"{riotIdByNameAndTag}{userName}/{tag}?api_key={_riotApi.GetCurrentApiKey()}";
                 var response = await _httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -124,7 +125,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             try
             {
 
-                var url = $"{riotSummonerByPuuid}{puuid}?api_key={_apiKey}";
+                var url = $"{riotSummonerByPuuid}{puuid}?api_key={_riotApi.GetCurrentApiKey()}";
                 var response = await _httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -145,7 +146,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         {
             try
             {
-                var url = $"{riotLeagueApi}{id}?api_key={_apiKey}";
+                var url = $"{riotLeagueApi}{id}?api_key={_riotApi.GetCurrentApiKey()}";
                 var response = await _httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
