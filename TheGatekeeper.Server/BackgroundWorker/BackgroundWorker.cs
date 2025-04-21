@@ -14,6 +14,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
         private readonly string riotSummonerByPuuid = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/";
+        private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
         
@@ -56,6 +57,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             _playersCollection.UpdateOne(filter, update);
                         }
                     }
+                    await NotifyDiscordGateKeeperPlaying();
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection().ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
@@ -240,6 +242,28 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var payload = new
             {
                 content = $"There was a change to the gate keeper rankings.\n{returnMessage}",
+                username = "The Gate Keeper"
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            var contentData = new StringContent(json, Encoding.UTF8, "application/json");
+
+            await _httpClient.PostAsync(_webhookUrl, contentData);
+        }
+
+        private async Task NotifyDiscordGateKeeperPlaying()
+        {
+            //TODO variable for Knechter
+            var gateKeeper = _playersCollection.Find(x => x.UserName.Equals("Knechter")).First();
+            var url = $"{riotSpectatorId}{gateKeeper.Account.puuid}?api_key={_riotApi.GetCurrentApiKey()}";
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+            var payload = new
+            {
+                content = $"The Gate Keeper is actual live in a game and need support by @everyone",
                 username = "The Gate Keeper"
             };
 
