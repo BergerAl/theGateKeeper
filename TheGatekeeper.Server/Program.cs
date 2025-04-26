@@ -77,7 +77,8 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
 });
 app.UseHttpsRedirection();
 app.UseRouting();
-app.MapHub<EventHub>("/timedOutUserVote");
+//TODO fix asap
+app.MapHub<EventHub>("/gatekeeper/timedOutUserVote");
 app.UseAuthorization();
 
 app.MapControllers();

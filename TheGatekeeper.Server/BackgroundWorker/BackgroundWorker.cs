@@ -17,6 +17,8 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
+        //TODO only a temporary fix
+        private float _gameId = 0;
         
         public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi)
         {
@@ -237,7 +239,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)
             {
-                returnMessage += $"{Item.name} moved to new position {NewIndex} \n";
+                returnMessage += $"{Item.name} moved to new position {NewIndex + 1} \n";
             }
             var payload = new
             {
@@ -259,8 +261,15 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
+                _gameId = 0;
                 return;
             }
+            var spectatorDto = await response.Content.ReadFromJsonAsync<SpectatorDtoV1>().ConfigureAwait(false);
+            if (_gameId == spectatorDto?.gameId || spectatorDto?.gameMode != "NORMAL")
+            {
+                return;
+            }
+            _gameId = spectatorDto?.gameId ?? 0;
             var payload = new
             {
                 content = $"The Gate Keeper is actual live in a game and need support by @everyone",
@@ -269,7 +278,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
             var json = JsonSerializer.Serialize(payload);
             var contentData = new StringContent(json, Encoding.UTF8, "application/json");
-
+            
             await _httpClient.PostAsync(_webhookUrl, contentData);
         }
     }

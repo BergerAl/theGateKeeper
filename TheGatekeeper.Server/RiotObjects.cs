@@ -19,6 +19,12 @@ namespace TheGateKeeper.Server
         public float summonerLevel { get; set; } = 0;
     }
 
+    public class  SpectatorDtoV1 
+    {
+        public float gameId { get; set; } = 0;
+        public string gameMode {  get; set; } = string.Empty;
+    }
+
     public class LeagueEntryDtoV1 : IEquatable<LeagueEntryDtoV1>
     {
         public string leagueId { get; set; } = string.Empty;
