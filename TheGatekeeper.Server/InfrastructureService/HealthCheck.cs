@@ -2,20 +2,21 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System.IO.Abstractions;
+using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.InfrastructureService
 {
     public class HealthCheck : IHealthCheck
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
 
+        private readonly IRiotApi _riotApi;
         private readonly string lolStatusApi = "https://europe.api.riotgames.com/lor/status/v1/platform-data?api_key=";
 
-        public HealthCheck(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public HealthCheck(IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi)
         {
             _httpClient = httpClientFactory.CreateClient();
-            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
+            _riotApi = riotApi;
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(
@@ -25,7 +26,7 @@ namespace TheGateKeeper.Server.InfrastructureService
             try
             {
                 // Replace with your target URL
-                var response = await _httpClient.GetAsync($"{lolStatusApi}{_apiKey}",
+                var response = await _httpClient.GetAsync($"{lolStatusApi}{_riotApi.GetCurrentApiKey()}",
                     cancellationToken);
 
                 if (!response.IsSuccessStatusCode)

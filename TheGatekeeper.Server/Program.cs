@@ -62,7 +62,6 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -71,14 +70,20 @@ if (app.Environment.IsDevelopment())
 #if DEBUG
 app.UseCors("_myAllowSpecificOrigins");
 # endif
+# if DEBUG
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     Predicate = _ => true,
 });
+# else
+app.MapHealthChecks("/gatekeeper/api/health", new HealthCheckOptions
+{
+    Predicate = _ => true,
+});
+# endif
 app.UseHttpsRedirection();
 app.UseRouting();
-//TODO fix asap
-app.MapHub<EventHub>("/gatekeeper/timedOutUserVote");
+app.MapHub<EventHub>("/timedOutUserVote");
 app.UseAuthorization();
 
 app.MapControllers();
