@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, healthCheck, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -11,6 +11,11 @@ export enum ModalTypeDialog {
     None,
     WorkpieceCreation,
     DeleteWorkpiece
+}
+
+export enum DisplayedView {
+    DefaultPage = "DefaultPage",
+    ResultsPage = "ResultsPage"
 }
 
 export interface SnackBarState {
@@ -32,6 +37,10 @@ export interface FrontEndInfo {
     voting: Voting
 }
 
+export interface AppConfiguration {
+    displayedView: DisplayedView
+}
+
 export interface ViewState {
     actualSelectedPage: number
     snackBarState: SnackBarState
@@ -39,7 +48,8 @@ export interface ViewState {
         modalDialogType: ModalTypeDialog
         visible: boolean
     },
-    frontEndInfo: FrontEndInfo[]
+    frontEndInfo: FrontEndInfo[],
+    appConfiguration : AppConfiguration
 }
 
 export const initialState: ViewState = {
@@ -49,7 +59,8 @@ export const initialState: ViewState = {
         modalDialogType: ModalTypeDialog.None,
         visible: false
     },
-    frontEndInfo: []
+    frontEndInfo: [],
+    appConfiguration : { displayedView : DisplayedView.DefaultPage }
 };
 
 export const viewStateSlice = createSlice({
@@ -62,13 +73,16 @@ export const viewStateSlice = createSlice({
         setModalDialogState: (state, action: PayloadAction<{ visible: boolean, modalDialogType?: ModalTypeDialog }>) => {
             state.modalDialog = {visible: action.payload.visible, modalDialogType: action.payload?.modalDialogType ? action.payload?.modalDialogType : ModalTypeDialog.None };
         },
-        updateUsersIfBlocked:(state, action: PayloadAction<FrontEndInfo[]>) => {
+        updateUsersIfBlocked: (state, action: PayloadAction<FrontEndInfo[]>) => {
             action.payload.forEach(element => {
                 var playerIndex = state.frontEndInfo.findIndex(x => x.name == element.name)
                 if (playerIndex !== -1) {
                     state.frontEndInfo[playerIndex].voting = element.voting
                   }
             });
+        },
+        updateAppConfig: (state, action: PayloadAction<AppConfiguration>) => {
+            state.appConfiguration = action.payload
         }
     },
     extraReducers(builder) {
@@ -91,13 +105,26 @@ export const viewStateSlice = createSlice({
         builder.addCase(voteForUser.rejected, (state, action) => {
             state.snackBarState = {text: `Voting failed for ${action.meta.arg}`, status: SnackBarStatus.Error};
         });
+        builder.addCase(fetchConfiguration.fulfilled, (state, action) => {
+            state.appConfiguration = action.payload;
+        });
+        builder.addCase(fetchConfiguration.rejected, (state, action) => {
+            state.appConfiguration = { displayedView : DisplayedView.DefaultPage };
+        });
+        builder.addCase(updateConfiguration.fulfilled, (state, action) => {
+            state.appConfiguration = action.meta.arg;
+        });
+        builder.addCase(updateConfiguration.rejected, (state, action) => {
+            state.snackBarState = {text: `Setting state with value ${action.meta.arg} didn't work`, status: SnackBarStatus.Error};
+        });
       },
 });
 
 export const { 
     setSnackBarState, 
     setModalDialogState,
-    updateUsersIfBlocked
+    updateUsersIfBlocked,
+    updateAppConfig
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

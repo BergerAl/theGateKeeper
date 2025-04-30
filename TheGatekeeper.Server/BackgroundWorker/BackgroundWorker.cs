@@ -98,7 +98,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 Tag = tag, 
                 Account = accountDto, 
                 Summoner = summonerDto, 
-                Voting = new Voting() { voteBlockedUntil = DateTime.UtcNow, isBlocked = false },
+                Voting = new Voting() { voteBlockedUntil = DateTime.UtcNow, isBlocked = false, countAmount = 0 },
                 LeagueEntries = LeagueEntryList 
             }).ConfigureAwait(false);
         }

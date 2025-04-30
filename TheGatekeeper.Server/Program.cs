@@ -2,7 +2,9 @@ using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
+using System.Text.Json.Serialization;
 using TheGateKeeper.Server;
+using TheGateKeeper.Server.AppControl;
 using TheGateKeeper.Server.BackgroundWorker;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
@@ -16,6 +18,7 @@ builder.Configuration.AddDockerSecrets();
 builder.Services.AddLogging(builder => builder.AddConsole());
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
+builder.Services.AddSingleton<IAppControl, AppControl>();
 builder.Services.AddHttpClient();
 #if DEBUG
 builder.Services.AddCors(options =>
@@ -54,7 +57,11 @@ builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
 builder.Services.AddSignalR();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+     {
+         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+     });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -83,7 +90,7 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
 # endif
 app.UseHttpsRedirection();
 app.UseRouting();
-app.MapHub<EventHub>("/timedOutUserVote");
+app.MapHub<EventHub>("/backendUpdate");
 app.UseAuthorization();
 
 app.MapControllers();

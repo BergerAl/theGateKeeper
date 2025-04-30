@@ -5,6 +5,9 @@ const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
 module.exports = (phase, { defaultConfig }) => {
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
+      env: {
+        adminAccess: "true"
+      },
       devIndicators: false,
       async rewrites() {
         return [
@@ -13,8 +16,8 @@ module.exports = (phase, { defaultConfig }) => {
             destination: 'http://localhost:8891/api/:path*',
           },
           {
-            source: '/timedOutUserVote/:path*',
-            destination: 'http://localhost:8891/timedOutUserVote/:path*',
+            source: '/backendUpdate/:path*',
+            destination: 'http://localhost:8891/backendUpdate/:path*',
           }
         ];
       },

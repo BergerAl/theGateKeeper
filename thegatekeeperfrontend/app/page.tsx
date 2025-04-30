@@ -4,13 +4,14 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { FrontEndInfo, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
+import { AppConfiguration, FrontEndInfo, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
 import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
-import { fetchAllUsers, domainUrlPrefix, healthCheck } from "@/store/backEndCalls";
+import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
+import AdminControl from "./components/adminControl";
 
 function App() {
   const dispatch = useAppDispatch()
@@ -20,11 +21,14 @@ function App() {
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${domainUrlPrefix()}/timedOutUserVote`)
+      .withUrl(`${domainUrlPrefix()}/backendUpdate`)
       .build();
 
     newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfo[]) => {
       dispatch(updateUsersIfBlocked(frontEndInfo))
+    });
+    newConnection.on("UpdateConfigurationView", (appConfiguration: AppConfiguration) => {
+      dispatch(updateAppConfig(appConfiguration))
     });
 
     newConnection.start().catch(err => console.error('Error starting connection:', err));
@@ -41,6 +45,7 @@ function App() {
 
   useEffect(() => {
     dispatch(healthCheck())
+    dispatch(fetchConfiguration())
     dispatch(fetchAllUsers())
     // eslint-disable-next-line
   }, []);
@@ -61,6 +66,7 @@ function App() {
             theme === 'dark' ? darkTheme :
               vibrantTheme}>
             <SimpleSnackbar />
+            {adminAccess() && <AdminControl />}
             <TheGateKeeper />
             <ControlPanel />
           </ThemeProvider>

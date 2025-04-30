@@ -55,6 +55,12 @@ namespace TheGateKeeper.Server.InfrastructureService
                 {
                     await collection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = [] });
                 }
+                var appConfigCollection = _database.GetCollection<AppConfigurationDtoV1>("appConfiguration");
+                var appConfigFilter = Builders<AppConfigurationDtoV1>.Filter.Eq("_id", "appConfig");
+                if (!await appConfigCollection.Find(appConfigFilter).AnyAsync())
+                {
+                    await appConfigCollection.InsertOneAsync(new AppConfigurationDtoV1() { DisplayedView = DisplayedView.DefaultPage });
+                }
             }
             catch (MongoCommandException ex)
             {

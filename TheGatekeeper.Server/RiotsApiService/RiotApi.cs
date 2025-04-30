@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System.Text.RegularExpressions;
 
 namespace TheGateKeeper.Server.RiotsApiService
 {
@@ -7,6 +8,10 @@ namespace TheGateKeeper.Server.RiotsApiService
         private readonly ILogger _logger;
         private readonly IMongoCollection<PlayerDaoV1> _collection;
         private string _apiKey;
+        private static readonly Regex ApiKeyPattern = new Regex(
+            @"^RGAPI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+        );
 
         public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration) {
             var database = mongoClient.GetDatabase("gateKeeper");
@@ -34,9 +39,14 @@ namespace TheGateKeeper.Server.RiotsApiService
             return _apiKey;
         }
 
-        public void SetNewApiKey(string apiKey)
+        public bool SetNewApiKey(string apiKey)
         {
-            _apiKey = apiKey;
+            if(ApiKeyPattern.IsMatch(apiKey))
+            {
+                _apiKey = apiKey;
+                return true;
+            }
+            return false;
         }
     }
 }

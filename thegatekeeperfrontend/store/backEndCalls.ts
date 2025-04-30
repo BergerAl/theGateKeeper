@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { AppConfiguration } from "./features/baseComponentsSlice";
 
 export const domainUrlPrefix = () => {
     if (process.env.urlPrefix == undefined) {
@@ -6,6 +7,14 @@ export const domainUrlPrefix = () => {
     } else {
         return process.env.urlPrefix
     }
+}
+
+export const adminAccess = () => {
+    //This is just a workaround as long as we don't have a user management 
+    if(process.env.adminAccess == "true") {
+        return true
+    }
+    return false;
 }
 
 export const voteForUser = createAsyncThunk(
@@ -47,3 +56,30 @@ export const healthCheck = createAsyncThunk(
         return data;
     }
 ); 
+
+export const fetchConfiguration = createAsyncThunk(
+    'theGateKeeper/appConfig',
+    async () => {
+        const response = await fetch(`${domainUrlPrefix()}/api/AppConfiguration/getConfiguration`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch app configuration: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    }
+);
+
+export const updateConfiguration = createAsyncThunk(
+    'theGateKeeper/setAppConfig',
+    async (appConfig: AppConfiguration) => {
+        const response = await fetch(`${domainUrlPrefix()}/api/AppConfiguration`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appConfig)
+        })
+        if (!response.ok) {
+            throw new Error(`Failed to set configuration: ${response.statusText}`);
+        }
+    }
+);

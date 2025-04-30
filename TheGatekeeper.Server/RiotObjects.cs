@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using System.Text.Json.Serialization;
 
 namespace TheGateKeeper.Server
 {
@@ -80,6 +81,13 @@ namespace TheGateKeeper.Server
     public class FrontEndInfo : Standings
     {
         public Voting voting { get; set; } = new Voting() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
+    }
+
+    public class FrontendAppConfigurationDaoV1
+    {
+        [JsonPropertyName("displayedView")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public DisplayedView DisplayedView { get; set; }
     }
 
     public class RiotUser

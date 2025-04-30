@@ -4,6 +4,6 @@
     {
         public Task<IEnumerable<FrontEndInfo>> GetAllRanks();
         public string GetCurrentApiKey();
-        public void SetNewApiKey(string apiKey);
+        public bool SetNewApiKey(string apiKey);
     }
 }
