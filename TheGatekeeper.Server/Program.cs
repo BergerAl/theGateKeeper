@@ -76,7 +76,7 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
     Predicate = _ => true,
 });
 # else
-app.MapHealthChecks("/gatekeeper/api/health", new HealthCheckOptions
+app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     Predicate = _ => true,
 });

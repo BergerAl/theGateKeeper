@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using System.IO.Abstractions;
 using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.InfrastructureService

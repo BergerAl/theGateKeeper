@@ -11,9 +11,10 @@ export const domainUrlPrefix = () => {
 export const voteForUser = createAsyncThunk(
     'theGateKeeper/voteForUser',
     async (userName: string) => {
-        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/voteForUser?userName=${userName}`, {
+        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/voteForUser`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userName)
         })
         if (!response.ok) {
             throw new Error(`Failed voting for user: ${response.statusText}`);
