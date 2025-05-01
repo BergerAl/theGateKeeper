@@ -18,6 +18,14 @@ namespace TheGateKeeper.Controllers
             return Ok(config);
         }
 
+        [HttpGet("getGateKeeperInfo")]
+        public async Task<ActionResult> GetGateKeeperInformation()
+        {
+            var config = await _appControl.GetGateKeeperInformation();
+            return Ok(config);
+        }
+
+
         [HttpPut]
         public async Task<ActionResult> UpdateConfiguration([FromBody] AppConfigurationDtoV1 config)
         {

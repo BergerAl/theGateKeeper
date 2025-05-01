@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, fetchConfiguration, fetchCurrentVotingStandings, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, fetchCurrentVotingStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -33,6 +33,10 @@ export interface VotingStandings {
     votes: number
 }
 
+export interface GateKeeperInfo {
+    name: string
+}
+
 export interface FrontEndInfo {
     name: string
     tier: string
@@ -56,6 +60,7 @@ export interface ViewState {
     frontEndInfo: FrontEndInfo[],
     votingStandings: VotingStandings[]
     appConfiguration: AppConfigurationDtoV1,
+    gateKeeperInfo: GateKeeperInfo
     isDeviceMobile: boolean
 }
 
@@ -69,6 +74,7 @@ export const initialState: ViewState = {
     frontEndInfo: [],
     votingStandings: [],
     appConfiguration: { displayedView: DisplayedView.DefaultPage },
+    gateKeeperInfo: { name: '' },
     isDeviceMobile: false
 };
 
@@ -131,6 +137,9 @@ export const viewStateSlice = createSlice({
         });
         builder.addCase(fetchCurrentVotingStandings.fulfilled, (state, action) => {
             state.votingStandings = action.payload
+        });
+        builder.addCase(fetchGateKeeperInfo.fulfilled, (state, action) => {
+            state.gateKeeperInfo = action.payload
         });
     },
 });

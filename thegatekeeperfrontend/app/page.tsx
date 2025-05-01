@@ -9,7 +9,7 @@ import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
 import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
-import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess } from "@/store/backEndCalls";
+import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess, fetchGateKeeperInfo } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
 
@@ -50,6 +50,7 @@ function App() {
     dispatch(healthCheck())
     dispatch(fetchConfiguration())
     dispatch(fetchAllUsers())
+    dispatch(fetchGateKeeperInfo())
     // eslint-disable-next-line
   }, []);
 

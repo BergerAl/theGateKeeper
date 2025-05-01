@@ -19,8 +19,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());
 
         CreateMap<GateKeeperInformationDaoV1, GateKeeperInformationDtoV1>()
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-            .ForMember(dest => dest.GameId, opt => opt.MapFrom(src => src.GameId));
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
 
         CreateMap<GateKeeperInformationDtoV1, GateKeeperInformationDaoV1>()
             .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());

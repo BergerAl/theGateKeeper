@@ -83,7 +83,5 @@ namespace TheGateKeeper.Server
     {
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
-        [JsonPropertyName("gameId")]
-        public float GameId { get; set; } = 0;
     }
 }

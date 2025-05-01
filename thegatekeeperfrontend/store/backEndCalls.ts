@@ -96,3 +96,16 @@ export const fetchCurrentVotingStandings = createAsyncThunk(
         return data;
     }
 );
+
+export const fetchGateKeeperInfo = createAsyncThunk(
+    'theGateKeeper/fetchGateKeeperInfo',
+    async () => {
+        const response = await fetch(`${domainUrlPrefix()}/api/AppConfiguration/getGateKeeperInfo`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch the gateKeeper infos: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    }
+);

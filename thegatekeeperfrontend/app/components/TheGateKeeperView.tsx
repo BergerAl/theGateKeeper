@@ -15,6 +15,7 @@ import { DisplayedView } from '@/store/features/baseComponentsSlice';
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
   const actualView = useAppSelector(state => state.viewStateSlice.appConfiguration.displayedView)
+  const gateKeeperName = useAppSelector(state => state.viewStateSlice.gateKeeperInfo.name)
   const dispatch = useAppDispatch()
   return (
     <>
@@ -35,8 +36,7 @@ export const TheGateKeeper: React.FC = () => {
               {users.map((row) => (
                 <TableRow
                   key={row.name}
-                  //TODO: Remove Knechter
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 }, backgroundColor: row.name == "Knechter" ? "#FF474C" : "default" }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 }, backgroundColor: row.name == gateKeeperName ? "#FF474C" : "default" }}
                 >
                   <TableCell component="th" scope="row">
                     {row.name}

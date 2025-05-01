@@ -8,6 +8,7 @@ namespace TheGateKeeper.Server.AppControl
     {
         Task<AppConfigurationDtoV1> GetConfigurationAsync();
         Task UpdateConfigurationAsync(AppConfigurationDtoV1 config);
+        Task<GateKeeperInformationDtoV1> GetGateKeeperInformation();
     }
 
     public class AppControl : IAppControl
@@ -16,6 +17,7 @@ namespace TheGateKeeper.Server.AppControl
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
         private readonly IHubContext<EventHub> _eventHub;
         private readonly IMapper _mapper;
+        private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
 
         public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, IMapper mapper)
         {
@@ -24,12 +26,19 @@ namespace TheGateKeeper.Server.AppControl
             _mapper = mapper;
             var database = mongoClient.GetDatabase("gateKeeper");
             _appConfiguration = database.GetCollection<AppConfigurationDaoV1>("appConfiguration");
+            _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
         }
 
         public async Task<AppConfigurationDtoV1> GetConfigurationAsync()
         {
             var config = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
             return _mapper.Map<AppConfigurationDtoV1>(config);
+        }
+
+        public async Task<GateKeeperInformationDtoV1> GetGateKeeperInformation()
+        {
+            var gateKeeperInfo = await _gateKeeperCollection.Find(_ => true).FirstAsync();
+            return _mapper.Map<GateKeeperInformationDtoV1>(gateKeeperInfo);
         }
 
         public async Task UpdateConfigurationAsync(AppConfigurationDtoV1 appConfigurationDto)
