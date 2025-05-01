@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using AutoMapper;
+using MongoDB.Driver;
 using System.Text.RegularExpressions;
 
 namespace TheGateKeeper.Server.RiotsApiService
@@ -8,16 +9,18 @@ namespace TheGateKeeper.Server.RiotsApiService
         private readonly ILogger _logger;
         private readonly IMongoCollection<PlayerDaoV1> _collection;
         private string _apiKey;
+        private readonly IMapper _mapper;
         private static readonly Regex ApiKeyPattern = new Regex(
             @"^RGAPI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
         );
 
-        public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration) {
+        public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration, IMapper mapper) {
             var database = mongoClient.GetDatabase("gateKeeper");
             _collection = database.GetCollection<PlayerDaoV1>("players");
             _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<FrontEndInfo>> GetAllRanks()
@@ -25,7 +28,7 @@ namespace TheGateKeeper.Server.RiotsApiService
             try
             {
                 var players = await _collection.Find(_ => true).ToListAsync();
-                return players.PlayerToFrontEndInfo().SortUsers();
+                return players.PlayerToFrontEndInfo(_mapper).SortUsers();
             }
             catch (Exception e)
             {

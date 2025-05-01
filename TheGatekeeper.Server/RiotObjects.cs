@@ -20,7 +20,7 @@ namespace TheGateKeeper.Server
         public float summonerLevel { get; set; } = 0;
     }
 
-    public class  SpectatorDtoV1 
+    public class SpectatorDtoV1 
     {
         public float gameId { get; set; } = 0;
         public string gameMode {  get; set; } = string.Empty;
@@ -80,7 +80,7 @@ namespace TheGateKeeper.Server
 
     public class FrontEndInfo : Standings
     {
-        public Voting voting { get; set; } = new Voting() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
+        public VotingDtoV1 voting { get; set; } = new VotingDtoV1() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
     }
 
     public class FrontendAppConfigurationDaoV1

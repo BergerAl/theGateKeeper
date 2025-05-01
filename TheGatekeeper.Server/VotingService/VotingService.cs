@@ -22,7 +22,7 @@ namespace TheGateKeeper.Server.VotingService
                 var player = await _collection.Find(filter).FirstOrDefaultAsync();
                 if (!player.Voting.isBlocked)
                 {
-                    var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting, new Voting() { isBlocked = true, voteBlockedUntil = DateTime.UtcNow.AddSeconds(30), countAmount = ++ player.Voting.countAmount });
+                    var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting, new VotingDaoV1() { isBlocked = true, voteBlockedUntil = DateTime.UtcNow.AddSeconds(30), countAmount = ++ player.Voting.countAmount });
                     await _collection.UpdateOneAsync(filter, update);
                     return new VotingCallResult() { Success = true };
                 }

@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
-using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Threading.Tasks;
 
 namespace TheGateKeeper.Server.AppControl
 {

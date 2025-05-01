@@ -16,14 +16,20 @@ namespace TheGateKeeper.Server
         public AccountDtoV1 Account { get; set; }
         public SummonerDtoV1 Summoner { get; set; }
 
-        public Voting Voting { get; set; }
+        public VotingDaoV1 Voting { get; set; }
         public List<LeagueEntryDtoV1> LeagueEntries { get; set; }
     }
 
     [BsonIgnoreExtraElements]
-    public class Voting
+    public class VotingDaoV1
     {
         public double countAmount { get; set; }
+        public bool isBlocked { get; set; }
+        public DateTime voteBlockedUntil { get; set; }
+    }
+
+    public class VotingDtoV1
+    {
         public bool isBlocked { get; set; }
         public DateTime voteBlockedUntil { get; set; }
     }

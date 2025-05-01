@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using AutoMapper;
+using MongoDB.Driver;
 
 namespace TheGateKeeper.Server
 {
@@ -27,13 +28,13 @@ namespace TheGateKeeper.Server
                 customRankRank.ContainsKey(x.rank) ? customRankRank[x.rank] : int.MaxValue).ThenByDescending(x => x.leaguePoints).ToList();
         }
 
-        public static async Task<IEnumerable<FrontEndInfo>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection)
+        public static async Task<IEnumerable<FrontEndInfo>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection, IMapper mapper)
         {       
             var players = await collection.Find(_ => true).ToListAsync();
-            return players.PlayerToFrontEndInfo().SortUsers();
+            return players.PlayerToFrontEndInfo(mapper).SortUsers();
         }
 
-        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfo(this List<PlayerDaoV1> players)
+        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfo(this List<PlayerDaoV1> players, IMapper mapper)
         {
             var responseList = new List<FrontEndInfo>();
             foreach (var player in players)
@@ -46,14 +47,14 @@ namespace TheGateKeeper.Server
                     rank = element.rank,
                     tier = element.tier,
                     playedGames = element.wins + element.losses,
-                    voting = player.Voting
+                    voting = mapper.Map<VotingDtoV1>(player.Voting)
                 };
                 responseList.Add(frontEndInfo);
             }
             return responseList;
         }
 
-        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players)
+        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players, IMapper mapper)
         {
             var responseList = new List<FrontEndInfo>();
             foreach (var player in players)
@@ -66,7 +67,7 @@ namespace TheGateKeeper.Server
                     rank = element.rank,
                     tier = element.tier,
                     playedGames = element.wins + element.losses,
-                    voting = new Voting() { isBlocked = false, voteBlockedUntil = player.Voting.voteBlockedUntil }
+                    voting = mapper.Map<VotingDtoV1>(player.Voting)
                 };
                 responseList.Add(frontEndInfo);
             }

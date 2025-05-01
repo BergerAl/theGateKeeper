@@ -1,21 +1,21 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
-using System.IO.Abstractions;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
     public class ScheduledTaskService : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection;
-        private readonly IMongoCollection<StoredStandingsDtoV1> _standingsCollection;
         private readonly ILogger<ScheduledTaskService> _logger;
         private readonly IHubContext<EventHub> _eventHub;
+        private readonly IMapper _mapper;
 
-        public ScheduledTaskService(IMongoClient client, IHubContext<EventHub> eventHub)
+        public ScheduledTaskService(IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper)
         {
+            _mapper = mapper;
             _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
-            _standingsCollection = client.GetDatabase("gateKeeper").GetCollection<StoredStandingsDtoV1>("standings");
             _eventHub = eventHub;
         }
 
@@ -33,7 +33,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     try
                     {
-                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo());
+                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo(_mapper));
                     }
                     catch (Exception ex)
                     {
@@ -48,7 +48,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     try
                     {
-                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", playersToUnblock.PlayerToFrontEndInfoUnblocked());
+                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", playersToUnblock.PlayerToFrontEndInfoUnblocked(_mapper));
                         var filter = Builders<PlayerDaoV1>.Filter.Eq(doc => doc.UserName, task.UserName);
                         var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting.isBlocked, false);
                         await _playersCollection.UpdateOneAsync(filter, update);

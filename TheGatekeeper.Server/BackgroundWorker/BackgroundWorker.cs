@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using AutoMapper;
+using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
 using TheGateKeeper.Server.RiotsApiService;
@@ -17,12 +18,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
+        private readonly IMapper _mapper;
         //TODO only a temporary fix
         private float _gameId = 0;
         
-        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi)
+        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper)
         {
             _logger = logger;
+            _mapper = mapper;
             _httpClient = httpClientFactory.CreateClient();
             var database = mongoClient.GetDatabase("gateKeeper");
             _playersCollection = database.GetCollection<PlayerDaoV1>("players");
@@ -60,7 +63,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         }
                     }
                     await NotifyDiscordGateKeeperPlaying();
-                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection().ConfigureAwait(false);
+                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
                     _logger.LogInformation($"BackgroundWorker finished process successfully");
@@ -98,7 +101,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 Tag = tag, 
                 Account = accountDto, 
                 Summoner = summonerDto, 
-                Voting = new Voting() { voteBlockedUntil = DateTime.UtcNow, isBlocked = false, countAmount = 0 },
+                Voting = new VotingDaoV1() { voteBlockedUntil = DateTime.UtcNow, isBlocked = false, countAmount = 0 },
                 LeagueEntries = LeagueEntryList 
             }).ConfigureAwait(false);
         }
