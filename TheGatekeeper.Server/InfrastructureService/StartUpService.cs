@@ -61,10 +61,10 @@ namespace TheGateKeeper.Server.InfrastructureService
                     await appConfigCollection.InsertOneAsync(new AppConfigurationDaoV1() { DisplayedView = DisplayedView.DefaultPage });
                 }
 
-                var gateeKeeperCollection = _database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
-                if (!await gateeKeeperCollection.Find(_ => true).AnyAsync())
+                var gateKeeperCollection = _database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
+                if (!await gateKeeperCollection.Find(_ => true).AnyAsync())
                 {
-                    await gateeKeeperCollection.InsertOneAsync(new GateKeeperInformationDaoV1() { Name = "", GameId = 0 });
+                    await gateKeeperCollection.InsertOneAsync(new GateKeeperInformationDaoV1() { Name = "", GameId = 0 });
                 }
             }
             catch (MongoCommandException ex)
