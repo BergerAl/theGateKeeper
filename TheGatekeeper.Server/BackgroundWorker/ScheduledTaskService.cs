@@ -50,7 +50,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     try
                     {
-                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", playersToUnblock.PlayerToFrontEndInfoUnblocked(_mapper));
+                        await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", playersToUnblock.PlayerToFrontEndInfoUnblocked());
                         var filter = Builders<PlayerDaoV1>.Filter.Eq(doc => doc.UserName, task.UserName);
                         var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting.isBlocked, false);
                         await _playersCollection.UpdateOneAsync(filter, update);
@@ -74,7 +74,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
                     }
                 }
-
+                _logger.LogInformation($"ScheduledTaskService finished process successfully");
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
         }

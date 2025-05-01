@@ -54,7 +54,7 @@ namespace TheGateKeeper.Server
             return responseList;
         }
 
-        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players, IMapper mapper)
+        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players)
         {
             var responseList = new List<FrontEndInfo>();
             foreach (var player in players)
@@ -67,7 +67,7 @@ namespace TheGateKeeper.Server
                     rank = element.rank,
                     tier = element.tier,
                     playedGames = element.wins + element.losses,
-                    voting = mapper.Map<VotingDtoV1>(player.Voting)
+                    voting = new VotingDtoV1() { isBlocked = false, voteBlockedUntil = player.Voting.voteBlockedUntil }
                 };
                 responseList.Add(frontEndInfo);
             }
