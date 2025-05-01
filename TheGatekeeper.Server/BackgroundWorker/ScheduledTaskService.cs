@@ -7,15 +7,18 @@ namespace TheGateKeeper.Server.BackgroundWorker
     public class ScheduledTaskService : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection;
+        private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
         private readonly ILogger<ScheduledTaskService> _logger;
         private readonly IHubContext<EventHub> _eventHub;
         private readonly IMapper _mapper;
+        private AppConfigurationDaoV1 _appConfig;
 
         public ScheduledTaskService(IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper)
         {
             _mapper = mapper;
             _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
+            _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
             _eventHub = eventHub;
         }
 
@@ -24,8 +27,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
             while (!stoppingToken.IsCancellationRequested)
             {
                 var now = DateTime.UtcNow;
-
-
                 var blockedPlayers = await _playersCollection.Find(t =>
                     t.Voting.voteBlockedUntil >= now.AddSeconds(1) && t.Voting.isBlocked)
                     .ToListAsync(stoppingToken);
@@ -55,10 +56,23 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"Error executing task {task.Id}: {ex.Message}");
+                        _logger.LogError($"Error  executing task {task.Id}: {ex.Message}");
                     }
                 }
 
+                var appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
+                if (appConfig != _appConfig)
+                {
+                    _appConfig = appConfig;
+                    try
+                    {
+                        await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", _mapper.Map<AppConfigurationDtoV1>(appConfig));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
+                    }
+                }
 
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }

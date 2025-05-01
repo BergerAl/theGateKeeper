@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { AppConfiguration } from "./features/baseComponentsSlice";
+import { AppConfigurationDtoV1 } from "./features/baseComponentsSlice";
 
 export const domainUrlPrefix = () => {
     if (process.env.urlPrefix == undefined) {
@@ -72,7 +72,7 @@ export const fetchConfiguration = createAsyncThunk(
 
 export const updateConfiguration = createAsyncThunk(
     'theGateKeeper/setAppConfig',
-    async (appConfig: AppConfiguration) => {
+    async (appConfig: AppConfigurationDtoV1) => {
         const response = await fetch(`${domainUrlPrefix()}/api/AppConfiguration`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

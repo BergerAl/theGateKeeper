@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
 
@@ -12,21 +13,23 @@ namespace TheGateKeeper.Server.AppControl
     public class AppControl : IAppControl
     {
         private readonly ILogger<AppControl> _logger;
-        private readonly IMongoCollection<AppConfigurationDtoV1> _appConfiguration;
+        private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
         private readonly IHubContext<EventHub> _eventHub;
+        private readonly IMapper _mapper;
 
-        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub)
+        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, IMapper mapper)
         {
             _logger = logger;
             _eventHub = eventHub;
+            _mapper = mapper;
             var database = mongoClient.GetDatabase("gateKeeper");
-            _appConfiguration = database.GetCollection<AppConfigurationDtoV1>("appConfiguration");
+            _appConfiguration = database.GetCollection<AppConfigurationDaoV1>("appConfiguration");
         }
 
         public async Task<AppConfigurationDtoV1> GetConfigurationAsync()
         {
-            var config = await _appConfiguration.Find(c => true).FirstOrDefaultAsync();
-            return config ?? new AppConfigurationDtoV1();
+            var config = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
+            return _mapper.Map<AppConfigurationDtoV1>(config);
         }
 
         public async Task UpdateConfigurationAsync(AppConfigurationDtoV1 appConfigurationDto)
@@ -35,16 +38,13 @@ namespace TheGateKeeper.Server.AppControl
 
             if (existingConfig is not null)
             {
-                var emptyFilter = Builders<AppConfigurationDtoV1>.Filter.Empty;
-                var update = Builders<AppConfigurationDtoV1>.Update.Set(doc => doc, appConfigurationDto);
+                var emptyFilter = Builders<AppConfigurationDaoV1>.Filter.Empty;
+                var update = Builders<AppConfigurationDaoV1>.Update.Set(doc => doc.DisplayedView, appConfigurationDto.DisplayedView);
                 await _appConfiguration.UpdateOneAsync(emptyFilter, update);
-                _logger.LogDebug($"Updated app configuration with Id: {existingConfig.Id}");
+                _logger.LogDebug($"Updated app configuration.");
                 try
                 {
-                    await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", new FrontendAppConfigurationDaoV1
-                    {
-                        DisplayedView = appConfigurationDto.DisplayedView
-                    });
+                    await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", appConfigurationDto);
                 }
                 catch (Exception ex)
                 {
@@ -54,7 +54,7 @@ namespace TheGateKeeper.Server.AppControl
             }
             else
             {
-                await _appConfiguration.InsertOneAsync(appConfigurationDto);
+                await _appConfiguration.InsertOneAsync(_mapper.Map<AppConfigurationDaoV1>(appConfigurationDto));
             }
         }
     }

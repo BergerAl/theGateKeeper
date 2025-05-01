@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TheGateKeeper.Server;
-using TheGateKeeper.Server.AppControl;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
 
@@ -14,7 +13,7 @@ namespace TheGateKeeper.Controllers
         private readonly IVotingService _voteService = votingService;
 
         [HttpGet("getCurrentRanks")]
-        public Task<IEnumerable<FrontEndInfo>> GetAllAvailableCycles()
+        public Task<IEnumerable<FrontEndInfo>> GetAllRanks()
         {
             return _riotApi.GetAllRanks();
         }

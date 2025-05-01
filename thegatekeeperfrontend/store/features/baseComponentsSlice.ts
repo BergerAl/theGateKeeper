@@ -42,7 +42,7 @@ export interface FrontEndInfo {
     voting: Voting
 }
 
-export interface AppConfiguration {
+export interface AppConfigurationDtoV1 {
     displayedView: DisplayedView
 }
 
@@ -55,7 +55,7 @@ export interface ViewState {
     },
     frontEndInfo: FrontEndInfo[],
     votingStandings: VotingStandings[]
-    appConfiguration: AppConfiguration,
+    appConfiguration: AppConfigurationDtoV1,
     isDeviceMobile: boolean
 }
 
@@ -90,7 +90,7 @@ export const viewStateSlice = createSlice({
                 }
             });
         },
-        updateAppConfig: (state, action: PayloadAction<AppConfiguration>) => {
+        updateAppConfig: (state, action: PayloadAction<AppConfigurationDtoV1>) => {
             state.appConfiguration = action.payload
         },
         setIsMobileDevice: (state, action: PayloadAction<boolean>) => {

@@ -83,13 +83,6 @@ namespace TheGateKeeper.Server
         public VotingDtoV1 voting { get; set; } = new VotingDtoV1() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
     }
 
-    public class FrontendAppConfigurationDaoV1
-    {
-        [JsonPropertyName("displayedView")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public DisplayedView DisplayedView { get; set; }
-    }
-
     public class VotingStandingsDtoV1
     {
         [JsonPropertyName("playerName")]

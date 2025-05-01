@@ -1,9 +1,9 @@
 using AutoMapper;
 using TheGateKeeper.Server;
 
-public class VotingProfile : Profile
+public class MappingProfile : Profile
 {
-    public VotingProfile()
+    public MappingProfile()
     {
         CreateMap<VotingDaoV1, VotingDtoV1>()
             .ForMember(dest => dest.isBlocked, opt => opt.MapFrom(src => src.isBlocked))
@@ -11,5 +11,11 @@ public class VotingProfile : Profile
 
         CreateMap<VotingDtoV1, VotingDaoV1>()
             .ForMember(dest => dest.countAmount, opt => opt.UseDestinationValue());
+
+        CreateMap<AppConfigurationDaoV1, AppConfigurationDtoV1>()
+            .ForMember(dest => dest.DisplayedView, opt => opt.MapFrom(src => src.DisplayedView));
+
+        CreateMap<AppConfigurationDtoV1, AppConfigurationDaoV1>()
+            .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());
     }
 }

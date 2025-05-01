@@ -10,20 +10,18 @@ namespace TheGateKeeper.Controllers
     {
         private readonly IAppControl _appControl = appControl;
 
+
         [HttpGet("getConfiguration")]
         public async Task<ActionResult> GetAppConfiguration()
         {
             var config = await _appControl.GetConfigurationAsync();
-            return Ok(new FrontendAppConfigurationDaoV1
-            {
-                DisplayedView = config.DisplayedView
-            });
+            return Ok(config);
         }
 
         [HttpPut]
-        public async Task<ActionResult> UpdateConfiguration([FromBody] FrontendAppConfigurationDaoV1 config)
+        public async Task<ActionResult> UpdateConfiguration([FromBody] AppConfigurationDtoV1 config)
         {
-            await _appControl.UpdateConfigurationAsync(new AppConfigurationDtoV1() { DisplayedView = config.DisplayedView});
+            await _appControl.UpdateConfigurationAsync(config);
             return Ok();
         }
     }

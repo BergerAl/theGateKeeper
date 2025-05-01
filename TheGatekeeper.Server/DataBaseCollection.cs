@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.IdGenerators;
+using System.Text.Json.Serialization;
 
 namespace TheGateKeeper.Server
 {
@@ -44,12 +45,19 @@ namespace TheGateKeeper.Server
     }
 
     [BsonIgnoreExtraElements]
-    public class AppConfigurationDtoV1
+    public class AppConfigurationDaoV1
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
         [BsonRepresentation(BsonType.String)]
+        public DisplayedView DisplayedView { get; set; }
+    }
+
+    public class AppConfigurationDtoV1
+    {
+        [JsonPropertyName("displayedView")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public DisplayedView DisplayedView { get; set; }
     }
 
