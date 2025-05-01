@@ -49,17 +49,22 @@ namespace TheGateKeeper.Server.InfrastructureService
                     MaxSize = null,
                     MaxDocuments = null
                 });
-                var collection = _database.GetCollection<StoredStandingsDtoV1>("standings");
-                var filter = Builders<StoredStandingsDtoV1>.Filter.Eq("_id", "standingstable");
+                var collection = _database.GetCollection<StoredStandingsDaoV1>("standings");
+                var filter = Builders<StoredStandingsDaoV1>.Filter.Eq("_id", "standingstable");
                 if (!await collection.Find(filter).AnyAsync())
                 {
-                    await collection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = [] });
+                    await collection.InsertOneAsync(new StoredStandingsDaoV1() { Id = "standingstable", Standings = [] });
                 }
                 var appConfigCollection = _database.GetCollection<AppConfigurationDaoV1>("appConfiguration");
-                var appConfigFilter = Builders<AppConfigurationDaoV1>.Filter.Eq("_id", "appConfig");
-                if (!await appConfigCollection.Find(appConfigFilter).AnyAsync())
+                if (!await appConfigCollection.Find(_ => true).AnyAsync())
                 {
                     await appConfigCollection.InsertOneAsync(new AppConfigurationDaoV1() { DisplayedView = DisplayedView.DefaultPage });
+                }
+
+                var gateeKeeperCollection = _database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
+                if (!await gateeKeeperCollection.Find(_ => true).AnyAsync())
+                {
+                    await gateeKeeperCollection.InsertOneAsync(new GateKeeperInformationDaoV1() { Name = "", GameId = 0 });
                 }
             }
             catch (MongoCommandException ex)

@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
+using TheGateKeeper.Controllers;
 using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.BackgroundWorker
@@ -10,7 +11,8 @@ namespace TheGateKeeper.Server.BackgroundWorker
     {
         private readonly ILogger<BackgroundWorker> _logger;
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection;
-        private readonly IMongoCollection<StoredStandingsDtoV1> _standingsCollection;
+        private readonly IMongoCollection<StoredStandingsDaoV1> _standingsCollection;
+        private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
         private readonly HttpClient _httpClient;
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
@@ -19,8 +21,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
         private readonly IMapper _mapper;
-        //TODO only a temporary fix
-        private float _gameId = 0;
         
         public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper)
         {
@@ -29,9 +29,10 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _httpClient = httpClientFactory.CreateClient();
             var database = mongoClient.GetDatabase("gateKeeper");
             _playersCollection = database.GetCollection<PlayerDaoV1>("players");
-            _standingsCollection = database.GetCollection<StoredStandingsDtoV1>("standings");
+            _standingsCollection = database.GetCollection<StoredStandingsDaoV1>("standings");
+            _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
             _riotApi = riotApi;
-            _webhookUrl = configuration["DiscordWebhook"] ?? configuration["Discord:Webhook"];
+            _webhookUrl = configuration["DiscordWebhook"] ?? "";
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,11 +44,11 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogInformation("Checking if PlayerList changed");
                     foreach (var item in CurrentPlayerList.ConstUserList())
                     {
-                        var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == item.name && u.Tag == item.tag);
+                        var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == item.Name && u.Tag == item.Tag);
                         if(_playersCollection.CountDocuments(filter) == 0)
                         {
-                            _logger.LogInformation($"Adding new player to database {item.name} #{item.tag}");
-                            await AddNewDataBaseEntry(item.name, item.tag);
+                            _logger.LogInformation($"Adding new player to database {item.Name} #{item.Tag}");
+                            await AddNewDataBaseEntry(item.Name, item.Tag);
                         }
                     }
                     var players = await _playersCollection.Find(_ => true).ToListAsync();
@@ -115,7 +116,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
-                    _logger.LogError($"Error during reading of account information: {errorResponse.status.message}");
+                    _logger.LogError($"Error during reading of account information: {errorResponse?.Status.message}");
                     return new AccountDtoV1();
                 }
                 return await response.Content.ReadFromJsonAsync<AccountDtoV1>().ConfigureAwait(false);
@@ -137,7 +138,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
-                    _logger.LogError($"Error during reading of summoner info with following error: {errorResponse.status.message}");
+                    _logger.LogError($"Error during reading of summoner info with following error: {errorResponse?.Status.message}");
                     return new SummonerDtoV1();
                 }
                 return await response.Content.ReadFromJsonAsync<SummonerDtoV1>().ConfigureAwait(false);
@@ -208,18 +209,18 @@ namespace TheGateKeeper.Server.BackgroundWorker
         }
         private async Task InsertStandingsTable(List<Standings> newStandings)
         {
-            var filter = Builders<StoredStandingsDtoV1>.Filter.Empty;
-            var sort = Builders<StoredStandingsDtoV1>.Sort.Ascending(x => x.Id);
-            var update = Builders<StoredStandingsDtoV1>.Update.Set(x => x.Standings, newStandings);
+            var filter = Builders<StoredStandingsDaoV1>.Filter.Empty;
+            var sort = Builders<StoredStandingsDaoV1>.Sort.Ascending(x => x.Id);
+            var update = Builders<StoredStandingsDaoV1>.Update.Set(x => x.Standings, newStandings);
 
-            var options = new FindOneAndUpdateOptions<StoredStandingsDtoV1>
+            var options = new FindOneAndUpdateOptions<StoredStandingsDaoV1>
             {
                 Sort = sort
             };
             var result = await _standingsCollection.FindOneAndUpdateAsync(filter, update, options);
             if (result is null)
             {
-                await _standingsCollection.InsertOneAsync(new StoredStandingsDtoV1() { Id = "standingstable", Standings = newStandings });
+                await _standingsCollection.InsertOneAsync(new StoredStandingsDaoV1() { Id = "standingstable", Standings = newStandings });
             }
         }
 
@@ -258,31 +259,45 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
         private async Task NotifyDiscordGateKeeperPlaying()
         {
-            //TODO variable for Knechter
-            var gateKeeper = _playersCollection.Find(x => x.UserName.Equals("Knechter")).First();
-            var url = $"{riotSpectatorId}{gateKeeper.Account.puuid}?api_key={_riotApi.GetCurrentApiKey()}";
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                _gameId = 0;
-                return;
-            }
-            var spectatorDto = await response.Content.ReadFromJsonAsync<SpectatorDtoV1>().ConfigureAwait(false);
-            if (_gameId == spectatorDto?.gameId || spectatorDto?.gameMode != "NORMAL")
-            {
-                return;
-            }
-            _gameId = spectatorDto?.gameId ?? 0;
-            var payload = new
-            {
-                content = $"The Gate Keeper is actual live in a game and need support by @everyone",
-                username = "The Gate Keeper"
-            };
+                var emptyFilter = Builders<GateKeeperInformationDaoV1>.Filter.Empty;
+                var gateKeeperInfo = await _gateKeeperCollection.Find(_ => true).FirstAsync();
+                var gateKeeper = _playersCollection.Find(x => x.UserName.Equals(gateKeeperInfo.Name)).First();
+                var url = $"{riotSpectatorId}{gateKeeper.Account.puuid}?api_key={_riotApi.GetCurrentApiKey()}";
+                var response = await _httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var update = Builders<GateKeeperInformationDaoV1>.Update.Set(doc => doc.GameId, 0);
+                    await _gateKeeperCollection.UpdateOneAsync(emptyFilter, update);
+                    return;
+                }
+                var spectatorDto = await response.Content.ReadFromJsonAsync<SpectatorDtoV1>().ConfigureAwait(false);
+                if (gateKeeperInfo.GameId == spectatorDto?.gameId || spectatorDto?.gameMode != "NORMAL")
+                {
+                    return;
+                }
 
-            var json = JsonSerializer.Serialize(payload);
-            var contentData = new StringContent(json, Encoding.UTF8, "application/json");
-            
-            await _httpClient.PostAsync(_webhookUrl, contentData);
+                var newUpdate = Builders<GateKeeperInformationDaoV1>.Update.Set(doc => doc.GameId, spectatorDto?.gameId ?? 0);
+                await _gateKeeperCollection.UpdateOneAsync(emptyFilter, newUpdate);
+
+                var payload = new
+                {
+                    content = $"The Gate Keeper is actual live in a game and need support by @everyone",
+                    username = "The Gate Keeper"
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                var contentData = new StringContent(json, Encoding.UTF8, "application/json");
+
+                await _httpClient.PostAsync(_webhookUrl, contentData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error during sending of discord message. Exception {ex}");
+                throw;
+            }
+
         }
     }
 }

@@ -36,7 +36,7 @@ namespace TheGateKeeper.Server
     }
 
     [BsonIgnoreExtraElements]
-    public class StoredStandingsDtoV1
+    public class StoredStandingsDaoV1
     {
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         [BsonRepresentation(BsonType.String)]
@@ -65,5 +65,25 @@ namespace TheGateKeeper.Server
     {
         DefaultPage,
         ResultsPage
+    }
+
+    [BsonIgnoreExtraElements]
+    public class GateKeeperInformationDaoV1
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Id { get; set; }
+        public string Name { get; set; } = "";
+        public float GameId { get; set; } = 0;
+
+    }
+
+    [BsonIgnoreExtraElements]
+    public class GateKeeperInformationDtoV1
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = "";
+        [JsonPropertyName("gameId")]
+        public float GameId { get; set; } = 0;
     }
 }

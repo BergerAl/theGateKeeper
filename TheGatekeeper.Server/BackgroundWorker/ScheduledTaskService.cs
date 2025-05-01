@@ -13,8 +13,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IMapper _mapper;
         private AppConfigurationDaoV1 _appConfig;
 
-        public ScheduledTaskService(IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper)
+        public ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper)
         {
+            _logger = logger;
             _mapper = mapper;
             _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");

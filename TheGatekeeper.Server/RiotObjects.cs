@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace TheGateKeeper.Server
 {
@@ -93,13 +92,14 @@ namespace TheGateKeeper.Server
 
     public class RiotUser
     {
-        public string name { get; set; }
-        public string tag { get; set; }
+        public string Name { get; set; } = "";
+        public string Tag { get; set; } = "";
     }
 
     public class RiotErrorCode
     {
-        public RiotInnerErrorCode status { get; set; }
+        [JsonPropertyName("status")]
+        public RiotInnerErrorCode Status { get; set; }
     }
 
     public class RiotInnerErrorCode
