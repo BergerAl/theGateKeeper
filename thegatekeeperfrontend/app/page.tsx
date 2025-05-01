@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { AppConfiguration, FrontEndInfo, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
+import { AppConfiguration, FrontEndInfo, setIsMobileDevice, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
@@ -44,6 +44,9 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (window.innerWidth <= 768) {
+      dispatch(setIsMobileDevice(true))
+    }
     dispatch(healthCheck())
     dispatch(fetchConfiguration())
     dispatch(fetchAllUsers())
