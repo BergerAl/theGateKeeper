@@ -11,7 +11,7 @@ export const domainUrlPrefix = () => {
 
 export const adminAccess = () => {
     //This is just a workaround as long as we don't have a user management 
-    if(process.env.adminAccess == "true") {
+    if (process.env.adminAccess == "true") {
         return true
     }
     return false;
@@ -55,7 +55,7 @@ export const healthCheck = createAsyncThunk(
         const data = await response.text();
         return data;
     }
-); 
+);
 
 export const fetchConfiguration = createAsyncThunk(
     'theGateKeeper/appConfig',
@@ -81,5 +81,18 @@ export const updateConfiguration = createAsyncThunk(
         if (!response.ok) {
             throw new Error(`Failed to set configuration: ${response.statusText}`);
         }
+    }
+);
+
+export const fetchCurrentVotingStandings = createAsyncThunk(
+    'theGateKeeper/fetchCurrentStandings',
+    async () => {
+        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/getCurrentVotingStandings`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch all users: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
     }
 );

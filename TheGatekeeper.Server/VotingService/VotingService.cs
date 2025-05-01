@@ -1,4 +1,5 @@
 ﻿
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TheGateKeeper.Server.RiotsApiService;
 
@@ -14,6 +15,31 @@ namespace TheGateKeeper.Server.VotingService
             _collection = database.GetCollection<PlayerDaoV1>("players");
             _logger = logger;
         }
+
+        public async Task<IEnumerable<VotingStandingsDtoV1>> GetVoteStandings()
+        {
+            try
+            {
+                var allPlayers = await _collection.Find(_ => true).ToListAsync();
+                var pipeline = new BsonDocument[] {
+                    new BsonDocument("$project", new BsonDocument
+                    {
+                        { "_id", 0 },
+                        { "PlayerName", "$UserName" },
+                        { "Votes", "$Voting.countAmount" }
+                    })
+                };
+                var result = await _collection.Aggregate<VotingStandingsDtoV1>(pipeline).ToListAsync();
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Couldn't get current standings. Exception: {e}");
+                return [];
+            }
+
+        }
+
         public async Task<VotingCallResult> VoteForUser(string userName)
         {
             try

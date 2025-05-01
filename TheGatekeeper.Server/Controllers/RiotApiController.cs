@@ -19,6 +19,12 @@ namespace TheGateKeeper.Controllers
             return _riotApi.GetAllRanks();
         }
 
+        [HttpGet("getCurrentVotingStandings")]
+        public async Task<IEnumerable<VotingStandingsDtoV1>> GetCurrentVotingStandings()
+        {
+            return await _voteService.GetVoteStandings();
+        }
+
         [HttpPost("voteForUser")]
         public async Task<IActionResult> VoteForUser([FromBody] string userName)
         {

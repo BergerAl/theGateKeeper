@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, fetchConfiguration, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, fetchCurrentVotingStandings, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -28,6 +28,11 @@ export interface Voting {
     voteBlockedUntil: Date
 }
 
+export interface VotingStandings {
+    playerName: string
+    votes: number
+}
+
 export interface FrontEndInfo {
     name: string
     tier: string
@@ -49,6 +54,7 @@ export interface ViewState {
         visible: boolean
     },
     frontEndInfo: FrontEndInfo[],
+    votingStandings: VotingStandings[]
     appConfiguration: AppConfiguration,
     isDeviceMobile: boolean
 }
@@ -61,6 +67,7 @@ export const initialState: ViewState = {
         visible: false
     },
     frontEndInfo: [],
+    votingStandings: [],
     appConfiguration: { displayedView: DisplayedView.DefaultPage },
     isDeviceMobile: false
 };
@@ -121,6 +128,9 @@ export const viewStateSlice = createSlice({
         });
         builder.addCase(updateConfiguration.rejected, (state, action) => {
             state.snackBarState = { text: `Setting state with value ${action.meta.arg} didn't work`, status: SnackBarStatus.Error };
+        });
+        builder.addCase(fetchCurrentVotingStandings.fulfilled, (state, action) => {
+            state.votingStandings = action.payload
         });
     },
 });

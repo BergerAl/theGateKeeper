@@ -90,6 +90,14 @@ namespace TheGateKeeper.Server
         public DisplayedView DisplayedView { get; set; }
     }
 
+    public class VotingStandingsDtoV1
+    {
+        [JsonPropertyName("playerName")]
+        public string PlayerName { get; set; } = string.Empty;
+        [JsonPropertyName("votes")]
+        public double Votes { get; set; } = 0;
+    }
+
     public class RiotUser
     {
         public string name { get; set; }
