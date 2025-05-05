@@ -15,6 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddDockerSecrets();
 
+builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("appsettings.json", optional: false);
+
+#if DEBUG
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", 
+    optional: true);
+#endif
+
 // Add services to the container.
 builder.Services.AddLogging(builder => builder.AddConsole());
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
