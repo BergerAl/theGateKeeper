@@ -32,7 +32,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _standingsCollection = database.GetCollection<StoredStandingsDaoV1>("standings");
             _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
             _riotApi = riotApi;
-            _webhookUrl = configuration["DiscordWebhook"] ?? "";
+            _webhookUrl = configuration["discordWebhook"] ?? configuration["Discord:Webhook"] ?? "";
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
