@@ -2,6 +2,7 @@ using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
+using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using TheGateKeeper.Server;
@@ -23,8 +24,12 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
     optional: true);
 #endif
 
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
 // Add services to the container.
-builder.Services.AddLogging(builder => builder.AddConsole());
+builder.Services.AddSerilog(logger);
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddSingleton<IAppControl, AppControl>();

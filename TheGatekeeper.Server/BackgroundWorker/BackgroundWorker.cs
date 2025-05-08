@@ -47,7 +47,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == item.Name && u.Tag == item.Tag);
                         if(_playersCollection.CountDocuments(filter) == 0)
                         {
-                            _logger.LogInformation($"Adding new player to database {item.Name} #{item.Tag}");
+                            _logger.LogDebug($"Adding new player to database {item.Name} #{item.Tag}");
                             await AddNewDataBaseEntry(item.Name, item.Tag);
                         }
                     }
@@ -57,7 +57,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         var leagueEntries = await GetLeagueEntryListDto(player.Summoner.id);
                         if (leagueEntries.Count() > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
                         {
-                            _logger.LogInformation($"Updating entries for {player.UserName}");
+                            _logger.LogDebug($"Updating entries for {player.UserName}");
                             var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == player.UserName && u.Tag == player.Tag);
                             var update = Builders<PlayerDaoV1>.Update.Set(m => m.LeagueEntries, leagueEntries);
                             _playersCollection.UpdateOne(filter, update);
@@ -72,7 +72,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.LogInformation("Data fetch operation cancelled");
+                    _logger.LogWarning("Data fetch operation cancelled");
                     throw;
                 }
                 catch (HttpRequestException ex)
