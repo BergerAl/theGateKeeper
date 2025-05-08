@@ -39,10 +39,10 @@ services:
       dockerfile: TheGatekeeper.Server/Dockerfile
     secrets:
       - api_key
-      - MongoDBSettingsConnectionString
-      - MongoDBSettingsUser
-      - MongoDBSettingsPassword
-      - DiscordWebhook
+      - mongoDbConnectionString
+      - mongoDbUser
+      - mongoDbPassword
+      - discordWebhook
     ports:
       - "8891:80"
       # - "8891:8890"
@@ -53,13 +53,13 @@ services:
 secrets:
   api_key:
     file: ./secrets/api_key
-  MongoDBSettingsConnectionString:
+  mongoDbConnectionString:
     file: ./secrets/mongoDbConnectionString
-  MongoDBSettingsUser:
+  mongoDbUser:
     file: ./secrets/mongoDbUser
-  MongoDBSettingsPassword:
+  mongoDbPassword:
     file: ./secrets/mongoDbPassword
-  DiscordWebhook:
+  discordWebhook:
     file: ./secrets/discordWebhook
 
 networks:
