@@ -30,7 +30,7 @@ namespace TheGateKeeper.Server.VotingService
                     })
                 };
                 var result = await _collection.Aggregate<VotingStandingsDtoV1>(pipeline).ToListAsync();
-                return result;
+                return result.OrderByDescending(x => x.Votes);
             }
             catch (Exception e)
             {

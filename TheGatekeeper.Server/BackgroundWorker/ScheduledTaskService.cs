@@ -4,24 +4,15 @@ using MongoDB.Driver;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
-    public class ScheduledTaskService : BackgroundService
+    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper) : BackgroundService
     {
-        private readonly IMongoCollection<PlayerDaoV1> _playersCollection;
-        private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
-        private readonly ILogger<ScheduledTaskService> _logger;
-        private readonly IHubContext<EventHub> _eventHub;
-        private readonly IMapper _mapper;
-        private AppConfigurationDaoV1 _appConfig;
-
-        public ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper)
-        {
-            _logger = logger;
-            _mapper = mapper;
-            _playersCollection = client.GetDatabase("gateKeeper")
+        private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
-            _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
-            _eventHub = eventHub;
-        }
+        private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
+        private readonly ILogger<ScheduledTaskService> _logger = logger;
+        private readonly IHubContext<EventHub> _eventHub = eventHub;
+        private readonly IMapper _mapper = mapper;
+        private AppConfigurationDaoV1? _appConfig;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {

@@ -18,7 +18,7 @@ namespace TheGateKeeper.Server.RiotsApiService
         public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration, IMapper mapper) {
             var database = mongoClient.GetDatabase("gateKeeper");
             _collection = database.GetCollection<PlayerDaoV1>("players");
-            _apiKey = configuration["api_key"] ?? File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../secrets/api_key"));
+            _apiKey = SecretsHelper.GetSecret(configuration, "api_key");
             _logger = logger;
             _mapper = mapper;
         }

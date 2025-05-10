@@ -32,7 +32,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _standingsCollection = database.GetCollection<StoredStandingsDaoV1>("standings");
             _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
             _riotApi = riotApi;
-            _webhookUrl = configuration["discordWebhook"] ?? configuration["Discord:Webhook"] ?? "";
+            _webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -198,7 +198,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (swaps.Count > 0)
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
-                    await NotifyDisocrd(swaps).ConfigureAwait(false);
+                    await NotifyDiscord(swaps).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -238,7 +238,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task NotifyDisocrd(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers)
+        private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers)
         {
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)
