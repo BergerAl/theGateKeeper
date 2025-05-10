@@ -13,7 +13,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.countAmount, opt => opt.UseDestinationValue());
 
         CreateMap<AppConfigurationDaoV1, AppConfigurationDtoV1>()
-            .ForMember(dest => dest.DisplayedView, opt => opt.MapFrom(src => src.DisplayedView));
+            .ForMember(dest => dest.DisplayedView, opt => opt.MapFrom(src => src.DisplayedView))
+            .ForMember(dest => dest.VotingDisabled, opt => opt.MapFrom(src => src.VotingDisabled));
 
         CreateMap<AppConfigurationDtoV1, AppConfigurationDaoV1>()
             .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());

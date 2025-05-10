@@ -10,7 +10,7 @@ import SwipeableDrawer from '@mui/material/SwipeableDrawer';
 import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { DisplayedView } from '@/store/features/baseComponentsSlice';
+import { AppConfigurationDtoV1, DisplayedView } from '@/store/features/baseComponentsSlice';
 import { fetchCurrentVotingStandings, updateConfiguration } from '@/store/backEndCalls';
 
 interface SelectOption {
@@ -18,11 +18,16 @@ interface SelectOption {
     label: string
 }
 
+function stringToBoolean(str: string): boolean {
+    return str.toLowerCase() === 'true';
+}
+
 const AdminControl = () => {
     const dispatch = useAppDispatch()
     const [open, setOpen] = React.useState(false)
-    const actualView = useAppSelector(state => state.viewStateSlice.appConfiguration)
+    const actualConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
     const currentVoting = useAppSelector(state => state.viewStateSlice.votingStandings)
+    const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
     useEffect(() => {
         dispatch(fetchCurrentVotingStandings())
         // eslint-disable-next-line
@@ -36,10 +41,25 @@ const AdminControl = () => {
             }))
     )
 
+    useEffect(() => {
+        setAppConfig(appConfig)
+        // eslint-disable-next-line
+    }, [actualConfig]);
+
     const handleSelectChange = (event: SelectChangeEvent<string>) => {
-        let clone = { ...actualView }
-        clone.displayedView = event.target.value as any as DisplayedView
-        dispatch(updateConfiguration(clone))
+        setAppConfig(currentConfig => {
+            let newConfig = { ...currentConfig }
+            newConfig.displayedView = event.target.value as any as DisplayedView
+            return newConfig
+        })
+    }
+
+    const handleVotingChanged = (event: SelectChangeEvent<string>) => {
+        setAppConfig(currentConfig => {
+            let newConfig = { ...currentConfig }
+            newConfig.votingDisabled = stringToBoolean(event.target.value)
+            return newConfig
+        })
     }
 
     return (
@@ -65,9 +85,9 @@ const AdminControl = () => {
             >
                 <Box sx={{ width: 250, p: 2 }}>
                     <FormControl fullWidth>
-                        <InputLabel>Select an option</InputLabel>
+                        <InputLabel>Select an display option</InputLabel>
                         <Select
-                            value={actualView.displayedView}
+                            value={appConfig.displayedView}
                             label="Select an option"
                             onChange={handleSelectChange}
                         >
@@ -76,6 +96,21 @@ const AdminControl = () => {
                                     {option.label}
                                 </MenuItem>
                             ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Disable voting mechanism</InputLabel>
+                        <Select
+                            value={appConfig.votingDisabled as any as string}
+                            label="Select an option"
+                            onChange={handleVotingChanged}
+                        >
+                            <MenuItem key={"false"} value={"false"}>
+                                {"false"}
+                            </MenuItem>
+                            <MenuItem key={"true"} value={"true"}>
+                                {"true"}
+                            </MenuItem>
                         </Select>
                     </FormControl>
                 </Box>
@@ -100,6 +135,7 @@ const AdminControl = () => {
                     </Table>
                 </TableContainer>
                 <Button onPointerDown={() => dispatch(fetchCurrentVotingStandings())} variant="contained">{"Refresh"}</Button>
+                <Button onPointerDown={() => dispatch(updateConfiguration(appConfig))} variant="contained">{"Save config"}</Button>
             </SwipeableDrawer>
         </>
     )

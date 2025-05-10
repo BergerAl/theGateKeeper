@@ -52,6 +52,7 @@ namespace TheGateKeeper.Server
         public ObjectId Id { get; set; }
         [BsonRepresentation(BsonType.String)]
         public DisplayedView DisplayedView { get; set; }
+        public bool VotingDisabled { get; set; }
     }
 
     public class AppConfigurationDtoV1
@@ -59,6 +60,9 @@ namespace TheGateKeeper.Server
         [JsonPropertyName("displayedView")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public DisplayedView DisplayedView { get; set; }
+
+        [JsonPropertyName("votingDisabled")]
+        public bool VotingDisabled { get; set; }
     }
 
     public enum DisplayedView

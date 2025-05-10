@@ -14,12 +14,12 @@ import { DisplayedView } from '@/store/features/baseComponentsSlice';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
-  const actualView = useAppSelector(state => state.viewStateSlice.appConfiguration.displayedView)
+  const appConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
   const gateKeeperName = useAppSelector(state => state.viewStateSlice.gateKeeperInfo.name)
   const dispatch = useAppDispatch()
   return (
     <>
-      {actualView == DisplayedView.DefaultPage &&
+      {appConfig.displayedView == DisplayedView.DefaultPage &&
         <TableContainer component={Paper} >
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
@@ -45,14 +45,14 @@ export const TheGateKeeper: React.FC = () => {
                   <TableCell align="right">{row.rank}</TableCell>
                   <TableCell align="right">{row.leaguePoints}</TableCell>
                   <TableCell align="right">{row.playedGames}</TableCell>
-                  <TableCell align="right"><Button onPointerDown={() => dispatch(voteForUser(row.name))} disabled={row.voting.isBlocked} variant="contained">{"Vote"}</Button></TableCell>
+                  <TableCell align="right"><Button onPointerDown={() => dispatch(voteForUser(row.name))} disabled={row.voting.isBlocked || appConfig.votingDisabled} variant="contained">{"Vote"}</Button></TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>}
       {/* TODO: Implement result page */}
-      {actualView == DisplayedView.ResultsPage && <div>{DisplayedView.ResultsPage}</div>}
+      {appConfig.displayedView == DisplayedView.ResultsPage && <div>{DisplayedView.ResultsPage}</div>}
     </>
   )
 }

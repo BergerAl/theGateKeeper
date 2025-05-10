@@ -48,7 +48,9 @@ namespace TheGateKeeper.Server.AppControl
             if (existingConfig is not null)
             {
                 var emptyFilter = Builders<AppConfigurationDaoV1>.Filter.Empty;
-                var update = Builders<AppConfigurationDaoV1>.Update.Set(doc => doc.DisplayedView, appConfigurationDto.DisplayedView);
+                var update = Builders<AppConfigurationDaoV1>.Update
+                    .Set(doc => doc.DisplayedView, appConfigurationDto.DisplayedView)
+                    .Set(doc => doc.VotingDisabled, appConfigurationDto.VotingDisabled);
                 await _appConfiguration.UpdateOneAsync(emptyFilter, update);
                 _logger.LogDebug($"Updated app configuration.");
                 try
