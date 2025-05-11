@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { Select, MenuItem, SelectChangeEvent, Typography, Divider } from '@mui/material';
 import { themeStyle, themeStylesArray } from '../../context/themes';
 import { useAppSelector } from '@/store/hooks';
-import { selectCurrentThemeMode, setThemeMode } from '@/store/features/controlPanelSlice';
+import { selectCurrentThemeMode, setThemeMode } from '@/store/features/userSlice';
 import { Disclaimer } from './disclaimer';
 
 export const ControlPanel: React.FC = () => {

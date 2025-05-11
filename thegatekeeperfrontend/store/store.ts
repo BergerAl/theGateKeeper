@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit'
 import viewStateSlice from './features/baseComponentsSlice'
-import controlPanelSlice from './features/controlPanelSlice'
+import userSlice from './features/userSlice'
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
         viewStateSlice: viewStateSlice,
-        controlPanelSlice: controlPanelSlice
+        userSlice: userSlice
     }
   })
 }

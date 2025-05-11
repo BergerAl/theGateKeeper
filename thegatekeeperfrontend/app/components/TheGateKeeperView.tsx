@@ -11,15 +11,20 @@ import Button from '@mui/material/Button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { voteForUser } from '@/store/backEndCalls';
 import { DisplayedView } from '@/store/features/baseComponentsSlice';
+import ResponsiveAppBar from './appBar';
+import { NavigationTab } from '@/store/features/userSlice';
+import { CurrentVoteStandings } from './currentVoteStandings';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
   const appConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
   const gateKeeperName = useAppSelector(state => state.viewStateSlice.gateKeeperInfo.name)
+  const userNavigation = useAppSelector(state => state.userSlice.currentNavigation)
   const dispatch = useAppDispatch()
   return (
     <>
-      {appConfig.displayedView == DisplayedView.DefaultPage &&
+      <ResponsiveAppBar />
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.ActualTable &&
         <TableContainer component={Paper} >
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
@@ -51,6 +56,8 @@ export const TheGateKeeper: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>}
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VotingStandings &&
+        <CurrentVoteStandings />}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage && <div>{DisplayedView.ResultsPage}</div>}
     </>

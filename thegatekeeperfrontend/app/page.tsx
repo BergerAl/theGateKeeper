@@ -17,7 +17,7 @@ function App() {
   const dispatch = useAppDispatch()
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [user, setUser] = useState<User>({})
-  const theme = useAppSelector(state => state.controlPanelSlice.selectedTheme)
+  const theme = useAppSelector(state => state.userSlice.selectedTheme)
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
