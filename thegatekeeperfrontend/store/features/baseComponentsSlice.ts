@@ -49,6 +49,7 @@ export interface FrontEndInfo {
 export interface AppConfigurationDtoV1 {
     displayedView: DisplayedView
     votingDisabled: boolean
+    displayResultsBar: boolean
 }
 
 export interface ViewState {
@@ -74,7 +75,7 @@ export const initialState: ViewState = {
     },
     frontEndInfo: [],
     votingStandings: [],
-    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false },
+    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, displayResultsBar: false },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false
 };
@@ -128,7 +129,7 @@ export const viewStateSlice = createSlice({
             state.appConfiguration = action.payload;
         });
         builder.addCase(fetchConfiguration.rejected, (state, action) => {
-            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true };
+            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, displayResultsBar: false };
         });
         builder.addCase(updateConfiguration.fulfilled, (state, action) => {
             state.appConfiguration = action.meta.arg;

@@ -10,19 +10,18 @@ import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
-
-const pages = Object.values(NavigationTab)
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
-
+    const resultsPageEnabled = useAppSelector(state => state.viewStateSlice.appConfiguration.displayResultsBar);
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
     };
 
+    const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VotingStandings || resultsPageEnabled)
     return (
         <AppBar position="static">
             <Container style={{ maxWidth: '100%' }}>
@@ -73,13 +72,13 @@ function ResponsiveAppBar() {
                             open={Boolean(anchorElNav)}
                             sx={{ display: { xs: 'block', md: 'none' } }}
                         >
-                            {pages.map((page) => (
-                                <MenuItem key={page} onPointerDown={() => {
-                                    dispatch(setUserNavigation(page as any as NavigationTab))
+                            {navigationOptions.map((option) => (
+                                <MenuItem key={option} onPointerDown={() => {
+                                    dispatch(setUserNavigation(option as any as NavigationTab))
                                     setAnchorElNav(null);
                                 }
                                 }>
-                                    <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
+                                    <Typography sx={{ textAlign: 'center' }}>{option}</Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
@@ -89,7 +88,6 @@ function ResponsiveAppBar() {
                         variant="h5"
                         noWrap
                         component="a"
-                        // onPointerDown={}
                         sx={{
                             mr: 2,
                             display: { xs: 'flex', md: 'none' },
@@ -104,17 +102,17 @@ function ResponsiveAppBar() {
                         THE GATEKEEPER
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                        {pages.map((page) => (
+                        {navigationOptions.map((option) => (
                             <Button
-                                key={page}
+                                key={option}
                                 sx={{ my: 2, color: 'white', display: 'block' }}
                                 onPointerDown={() => {
-                                    dispatch(setUserNavigation(page as any as NavigationTab))
+                                    dispatch(setUserNavigation(option as any as NavigationTab))
                                     setAnchorElNav(null);
                                 }
                                 }
                             >
-                                {page}
+                                {option}
                             </Button>
                         ))}
                     </Box>

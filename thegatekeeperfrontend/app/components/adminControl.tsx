@@ -42,7 +42,7 @@ const AdminControl = () => {
     )
 
     useEffect(() => {
-        setAppConfig(appConfig)
+        setAppConfig(actualConfig)
         // eslint-disable-next-line
     }, [actualConfig]);
 
@@ -58,6 +58,14 @@ const AdminControl = () => {
         setAppConfig(currentConfig => {
             let newConfig = { ...currentConfig }
             newConfig.votingDisabled = stringToBoolean(event.target.value)
+            return newConfig
+        })
+    }
+
+    const handleResultsBarChange = (event: SelectChangeEvent<string>) => {
+        setAppConfig(currentConfig => {
+            let newConfig = { ...currentConfig }
+            newConfig.displayResultsBar = stringToBoolean(event.target.value)
             return newConfig
         })
     }
@@ -104,6 +112,21 @@ const AdminControl = () => {
                             value={appConfig.votingDisabled as any as string}
                             label="Select an option"
                             onChange={handleVotingChanged}
+                        >
+                            <MenuItem key={"false"} value={"false"}>
+                                {"false"}
+                            </MenuItem>
+                            <MenuItem key={"true"} value={"true"}>
+                                {"true"}
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Display Result Bar</InputLabel>
+                        <Select
+                            value={appConfig.displayResultsBar as any as string}
+                            label="Select an option"
+                            onChange={handleResultsBarChange}
                         >
                             <MenuItem key={"false"} value={"false"}>
                                 {"false"}

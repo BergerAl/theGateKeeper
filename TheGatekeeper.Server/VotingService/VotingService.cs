@@ -1,6 +1,7 @@
 ﻿
 using MongoDB.Bson;
 using MongoDB.Driver;
+using TheGateKeeper.Server.AppControl;
 using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.VotingService
@@ -9,10 +10,12 @@ namespace TheGateKeeper.Server.VotingService
     {
         private readonly ILogger _logger;
         private readonly IMongoCollection<PlayerDaoV1> _collection;
-        public VotingService(IMongoClient mongoClient, ILogger<RiotApi> logger)
+        private readonly IAppControl _appControl;
+        public VotingService(IMongoClient mongoClient, ILogger<RiotApi> logger, IAppControl appControl)
         {
             var database = mongoClient.GetDatabase("gateKeeper");
             _collection = database.GetCollection<PlayerDaoV1>("players");
+            _appControl = appControl;
             _logger = logger;
         }
 
@@ -20,6 +23,13 @@ namespace TheGateKeeper.Server.VotingService
         {
             try
             {
+#if !DEBUG
+                var config = await _appControl.GetConfigurationAsync();
+                if (!config.DisplayResultsBar)
+                {
+                    return [];
+                }
+#endif
                 var allPlayers = await _collection.Find(_ => true).ToListAsync();
                 var pipeline = new BsonDocument[] {
                     new BsonDocument("$project", new BsonDocument
