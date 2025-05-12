@@ -54,6 +54,13 @@ namespace TheGateKeeper.Server.VotingService
         {
             try
             {
+#if !DEBUG
+                var config = await _appControl.GetConfigurationAsync();
+                if (config.VotingDisabled)
+                {
+                    return new VotingCallResult() { Success = false, ErrorMessage = $"Voting ist currently disabled!" };
+                }
+#endif
                 var filter = Builders<PlayerDaoV1>.Filter.Eq(doc => doc.UserName, userName);
                 var player = await _collection.Find(filter).FirstOrDefaultAsync();
                 if (!player.Voting.isBlocked)
