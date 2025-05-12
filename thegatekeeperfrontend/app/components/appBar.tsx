@@ -9,7 +9,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 
@@ -20,8 +19,10 @@ function ResponsiveAppBar() {
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
     };
-
-    const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VotingStandings || resultsPageEnabled)
+    const handleCloseNavMenu = () => {
+        setAnchorElNav(null);
+    };
+    const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VoteStandings || resultsPageEnabled)
     return (
         <AppBar position="static">
             <Container style={{ maxWidth: '100%' }}>
@@ -70,6 +71,7 @@ function ResponsiveAppBar() {
                                 horizontal: 'left',
                             }}
                             open={Boolean(anchorElNav)}
+                            onClose={handleCloseNavMenu}
                             sx={{ display: { xs: 'block', md: 'none' } }}
                         >
                             {navigationOptions.map((option) => (
@@ -83,7 +85,7 @@ function ResponsiveAppBar() {
                             ))}
                         </Menu>
                     </Box>
-                    <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
+                    <img src={'/images/clown.png'} alt="Clown" width={32} height={32} />
                     <Typography
                         variant="h5"
                         noWrap

@@ -11,7 +11,7 @@ import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab,
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '@/store/features/baseComponentsSlice';
-import { fetchCurrentVotingStandings, updateConfiguration } from '@/store/backEndCalls';
+import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
 
 interface SelectOption {
     value: string
@@ -26,10 +26,10 @@ const AdminControl = () => {
     const dispatch = useAppDispatch()
     const [open, setOpen] = React.useState(false)
     const actualConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
-    const currentVoting = useAppSelector(state => state.viewStateSlice.votingStandings)
+    const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
     useEffect(() => {
-        dispatch(fetchCurrentVotingStandings())
+        dispatch(fetchCurrentVoteStandings())
         // eslint-disable-next-line
     }, []);
     const options: SelectOption[] = (
@@ -157,7 +157,7 @@ const AdminControl = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
-                <Button onPointerDown={() => dispatch(fetchCurrentVotingStandings())} variant="contained">{"Refresh"}</Button>
+                <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button>
                 <Button onPointerDown={() => dispatch(updateConfiguration(appConfig))} variant="contained">{"Save config"}</Button>
             </SwipeableDrawer>
         </>

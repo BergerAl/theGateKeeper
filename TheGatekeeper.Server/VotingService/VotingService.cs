@@ -19,7 +19,7 @@ namespace TheGateKeeper.Server.VotingService
             _logger = logger;
         }
 
-        public async Task<IEnumerable<VotingStandingsDtoV1>> GetVoteStandings()
+        public async Task<IEnumerable<VoteStandingsDtoV1>> GetVoteStandings()
         {
             try
             {
@@ -39,7 +39,7 @@ namespace TheGateKeeper.Server.VotingService
                         { "Votes", "$Voting.countAmount" }
                     })
                 };
-                var result = await _collection.Aggregate<VotingStandingsDtoV1>(pipeline).ToListAsync();
+                var result = await _collection.Aggregate<VoteStandingsDtoV1>(pipeline).ToListAsync();
                 return result.OrderByDescending(x => x.Votes);
             }
             catch (Exception e)

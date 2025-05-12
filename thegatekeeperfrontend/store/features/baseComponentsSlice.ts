@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, fetchConfiguration, fetchCurrentVotingStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -28,7 +28,7 @@ export interface Voting {
     voteBlockedUntil: Date
 }
 
-export interface VotingStandings {
+export interface VoteStandings {
     playerName: string
     votes: number
 }
@@ -60,7 +60,7 @@ export interface ViewState {
         visible: boolean
     },
     frontEndInfo: FrontEndInfo[],
-    votingStandings: VotingStandings[]
+    voteStandings: VoteStandings[]
     appConfiguration: AppConfigurationDtoV1,
     gateKeeperInfo: GateKeeperInfo
     isDeviceMobile: boolean
@@ -74,7 +74,7 @@ export const initialState: ViewState = {
         visible: false
     },
     frontEndInfo: [],
-    votingStandings: [],
+    voteStandings: [],
     appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, displayResultsBar: false },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false
@@ -137,8 +137,8 @@ export const viewStateSlice = createSlice({
         builder.addCase(updateConfiguration.rejected, (state, action) => {
             state.snackBarState = { text: `Setting state with value ${action.meta.arg} didn't work`, status: SnackBarStatus.Error };
         });
-        builder.addCase(fetchCurrentVotingStandings.fulfilled, (state, action) => {
-            state.votingStandings = action.payload
+        builder.addCase(fetchCurrentVoteStandings.fulfilled, (state, action) => {
+            state.voteStandings = action.payload
         });
         builder.addCase(fetchGateKeeperInfo.fulfilled, (state, action) => {
             state.gateKeeperInfo = action.payload

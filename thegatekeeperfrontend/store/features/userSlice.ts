@@ -3,8 +3,8 @@ import { RootState } from '../store';
 import { themeStyle } from '../../context/themes';
 
 export enum NavigationTab {
-  ActualTable = "ActualTable",
-  VotingStandings = "VotingStandings"
+  LeagueStandings = "LeagueStandings",
+  VoteStandings = "VoteStandings"
 }
 
 export interface UserSlice {
@@ -14,7 +14,7 @@ export interface UserSlice {
 
 const initialState: UserSlice = {
   selectedTheme: 'dark',
-  currentNavigation: NavigationTab.ActualTable
+  currentNavigation: NavigationTab.LeagueStandings
 };
 
 export const userSlice = createSlice({

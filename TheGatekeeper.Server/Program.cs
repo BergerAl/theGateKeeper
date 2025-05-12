@@ -92,17 +92,10 @@ if (app.Environment.IsDevelopment())
 #if DEBUG
 app.UseCors("_myAllowSpecificOrigins");
 # endif
-# if DEBUG
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     Predicate = _ => true,
 });
-# else
-app.MapHealthChecks("/api/health", new HealthCheckOptions
-{
-    Predicate = _ => true,
-});
-# endif
 app.UseHttpsRedirection();
 app.UseRouting();
 app.MapHub<EventHub>("/backendUpdate");

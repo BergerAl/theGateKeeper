@@ -84,10 +84,10 @@ export const updateConfiguration = createAsyncThunk(
     }
 );
 
-export const fetchCurrentVotingStandings = createAsyncThunk(
+export const fetchCurrentVoteStandings = createAsyncThunk(
     'theGateKeeper/fetchCurrentStandings',
     async () => {
-        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/getCurrentVotingStandings`);
+        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/getCurrentVoteStandings`);
         if (!response.ok) {
             throw new Error(`Failed to fetch all users: ${response.statusText}`);
         }

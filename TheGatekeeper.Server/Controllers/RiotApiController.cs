@@ -18,8 +18,8 @@ namespace TheGateKeeper.Controllers
             return _riotApi.GetAllRanks();
         }
 
-        [HttpGet("getCurrentVotingStandings")]
-        public async Task<IEnumerable<VotingStandingsDtoV1>> GetCurrentVotingStandings()
+        [HttpGet("getCurrentVoteStandings")]
+        public async Task<IEnumerable<VoteStandingsDtoV1>> GetCurrentVoteStandings()
         {
             return await _voteService.GetVoteStandings();
         }

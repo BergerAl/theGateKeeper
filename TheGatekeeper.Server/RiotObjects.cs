@@ -82,7 +82,7 @@ namespace TheGateKeeper.Server
         public VotingDtoV1 voting { get; set; } = new VotingDtoV1() { isBlocked = false, voteBlockedUntil = DateTime.UtcNow };
     }
 
-    public class VotingStandingsDtoV1
+    public class VoteStandingsDtoV1
     {
         [JsonPropertyName("playerName")]
         public string PlayerName { get; set; } = string.Empty;

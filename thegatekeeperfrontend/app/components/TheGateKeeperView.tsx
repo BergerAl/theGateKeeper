@@ -24,7 +24,7 @@ export const TheGateKeeper: React.FC = () => {
   return (
     <>
       <ResponsiveAppBar />
-      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.ActualTable &&
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.LeagueStandings &&
         <TableContainer component={Paper} >
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>
@@ -56,7 +56,7 @@ export const TheGateKeeper: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>}
-      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VotingStandings &&
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VoteStandings &&
         <CurrentVoteStandings />}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage && <div>{DisplayedView.ResultsPage}</div>}

@@ -7,13 +7,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchCurrentVotingStandings } from '@/store/backEndCalls';
+import { fetchCurrentVoteStandings } from '@/store/backEndCalls';
 
 export const CurrentVoteStandings: React.FC = () => {
     const dispatch = useAppDispatch()
-    const currentVoting = useAppSelector(state => state.viewStateSlice.votingStandings)
+    const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     useEffect(() => {
-        dispatch(fetchCurrentVotingStandings())
+        dispatch(fetchCurrentVoteStandings())
         // eslint-disable-next-line
     }, []);
     return (
