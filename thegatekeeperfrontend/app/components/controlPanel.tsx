@@ -15,7 +15,7 @@ export const ControlPanel: React.FC = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', position: isMobile ? 'static' : 'absolute', bottom: '0%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'sticky', top: '100%' }}>
             <div style={{ marginBottom: '1%' }}>
                 <Typography component="span" color="primary" style={{ marginRight: '15px' }}>{"Select Theme"}</Typography>
                 <Select

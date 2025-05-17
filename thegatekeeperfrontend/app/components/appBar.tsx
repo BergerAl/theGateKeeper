@@ -11,6 +11,7 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
+import { domainUrlPrefix } from '@/store/backEndCalls';
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
@@ -85,7 +86,7 @@ function ResponsiveAppBar() {
                             ))}
                         </Menu>
                     </Box>
-                    <img src={'/images/clown.png'} alt="Clown" width={32} height={32} />
+                    <img src={`${domainUrlPrefix()}/images/clown.png`} alt="Clown" width={32} height={32} />
                     <Typography
                         variant="h5"
                         noWrap

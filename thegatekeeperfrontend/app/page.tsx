@@ -63,7 +63,7 @@ function App() {
       <body style={{
         background: theme === 'light' ? lightTheme.palette.background.paper :
           theme === 'dark' ? darkTheme.palette.background.paper :
-            vibrantTheme.palette.background.paper
+            vibrantTheme.palette.background.paper, minHeight: '98vh'
       }}>
         <CombinedContext.Provider value={value}>
           <ThemeProvider theme={theme === 'light' ? lightTheme :

@@ -59,7 +59,10 @@ export const TheGateKeeper: React.FC = () => {
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VoteStandings &&
         <CurrentVoteStandings />}
       {/* TODO: Implement result page */}
-      {appConfig.displayedView == DisplayedView.ResultsPage && <div>{DisplayedView.ResultsPage}</div>}
+      {appConfig.displayedView == DisplayedView.ResultsPage &&
+        <div>
+          {DisplayedView.ResultsPage}
+        </div>}
     </>
   )
 }
