@@ -17,16 +17,20 @@
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Mcrio.Configuration.Provider.Docker.Secrets" Version="1.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
-    <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
+    <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Update="appsettings.Development.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CommonServices\" />
   </ItemGroup>
 
   <Target Name="NpmInstall" Inputs="../thegatekeeperfrontend/package.json" Outputs="../thegatekeeperfrontend/node_modules/.install-stamp" Condition="'$(Configuration)' == 'Release'">

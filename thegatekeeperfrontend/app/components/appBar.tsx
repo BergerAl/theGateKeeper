@@ -12,13 +12,26 @@ import MenuItem from '@mui/material/MenuItem';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { domainUrlPrefix } from '@/store/backEndCalls';
+import { Tooltip } from '@mui/material';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import { translateUsersOnline } from '../common/common';
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const resultsPageEnabled = useAppSelector(state => state.viewStateSlice.appConfiguration.displayResultsBar);
+    const usersOnline = useAppSelector(state => state.viewStateSlice.appInfo.usersOnline)
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
+    };
+    const [toolTipOpen, setToolTipOpen] = React.useState(false);
+
+    const handleTooltipClose = () => {
+        setToolTipOpen(false);
+    };
+
+    const handleTooltipOpen = () => {
+        setToolTipOpen(true);
     };
     const handleCloseNavMenu = () => {
         setAnchorElNav(null);
@@ -86,7 +99,29 @@ function ResponsiveAppBar() {
                             ))}
                         </Menu>
                     </Box>
-                    <img src={`${domainUrlPrefix()}/images/clown.png`} alt="Clown" width={32} height={32} />
+                    <ClickAwayListener onClickAway={handleTooltipClose}>
+                        <Tooltip title={translateUsersOnline(usersOnline)}
+                            onClose={handleTooltipClose}
+                            open={toolTipOpen}>
+                            <div onClick={handleTooltipOpen} style={{ position: 'relative', display: 'inline-block' }}>
+                                <img src={`${domainUrlPrefix()}/images/clown.png`} alt="Clown" width={32} height={32} />
+                                <span style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '50%',
+                                    border: '1px solid white',
+                                    backgroundColor: '#610b0b',
+                                    textAlign: 'center',
+                                    fontSize: 'smaller'
+                                }}>
+                                    {usersOnline}
+                                </span>
+                            </div>
+                        </Tooltip>
+                    </ClickAwayListener>
                     <Typography
                         variant="h5"
                         noWrap

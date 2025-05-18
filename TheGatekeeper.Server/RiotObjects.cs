@@ -90,6 +90,12 @@ namespace TheGateKeeper.Server
         public double Votes { get; set; } = 0;
     }
 
+    public class GateKeeperAppInfoDtoV1
+    {
+        [JsonPropertyName("usersOnline")]
+        public int UsersOnline { get; set; } = 0;
+    }
+
     public class RiotUser
     {
         public string Name { get; set; } = "";

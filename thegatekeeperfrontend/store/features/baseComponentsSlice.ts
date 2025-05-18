@@ -28,6 +28,10 @@ export interface Voting {
     voteBlockedUntil: Date
 }
 
+export interface GateKeeperAppInfo {
+    usersOnline: number
+}
+
 export interface VoteStandings {
     playerName: string
     votes: number
@@ -59,11 +63,12 @@ export interface ViewState {
         modalDialogType: ModalTypeDialog
         visible: boolean
     },
-    frontEndInfo: FrontEndInfo[],
+    frontEndInfo: FrontEndInfo[]
     voteStandings: VoteStandings[]
-    appConfiguration: AppConfigurationDtoV1,
+    appConfiguration: AppConfigurationDtoV1
     gateKeeperInfo: GateKeeperInfo
     isDeviceMobile: boolean
+    appInfo: GateKeeperAppInfo
 }
 
 export const initialState: ViewState = {
@@ -77,7 +82,8 @@ export const initialState: ViewState = {
     voteStandings: [],
     appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, displayResultsBar: false },
     gateKeeperInfo: { name: '' },
-    isDeviceMobile: false
+    isDeviceMobile: false,
+    appInfo: {usersOnline: 0}
 };
 
 export const viewStateSlice = createSlice({
@@ -103,6 +109,9 @@ export const viewStateSlice = createSlice({
         },
         setIsMobileDevice: (state, action: PayloadAction<boolean>) => {
             state.isDeviceMobile = action.payload
+        },
+        setUsersOnline: (state, action: PayloadAction<GateKeeperAppInfo>) => {
+            state.appInfo = action.payload
         },
     },
     extraReducers(builder) {
@@ -151,7 +160,8 @@ export const {
     setModalDialogState,
     updateUsersIfBlocked,
     updateAppConfig,
-    setIsMobileDevice
+    setIsMobileDevice,
+    setUsersOnline
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

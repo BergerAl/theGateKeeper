@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.AppControl;
 using TheGateKeeper.Server.BackgroundWorker;
+using TheGateKeeper.Server.ConnectionManager;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
@@ -33,6 +34,7 @@ builder.Services.AddSerilog(logger);
 builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddSingleton<IAppControl, AppControl>();
+builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddHttpClient();
 #if DEBUG

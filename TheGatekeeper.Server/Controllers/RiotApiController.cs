@@ -27,7 +27,6 @@ namespace TheGateKeeper.Controllers
         [HttpPost("voteForUser")]
         public async Task<IActionResult> VoteForUser([FromBody] string userName)
         {
-            // Validate the input
             if (userName is null)
             {
                 return BadRequest(new { message = "No userName provided" });
