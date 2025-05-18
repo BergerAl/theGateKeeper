@@ -14,6 +14,7 @@ import { DisplayedView } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
 import { NavigationTab } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
+import { ResultPage } from './resultPage';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
@@ -60,9 +61,7 @@ export const TheGateKeeper: React.FC = () => {
         <CurrentVoteStandings />}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage &&
-        <div>
-          {DisplayedView.ResultsPage}
-        </div>}
+        <ResultPage />}
     </>
   )
 }
