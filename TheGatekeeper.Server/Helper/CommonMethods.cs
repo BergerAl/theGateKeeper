@@ -9,10 +9,15 @@ namespace TheGateKeeper.Server
         {
             var customTierRank = new Dictionary<string, int>
                 {
-                    {"PLATINUM", 1},
-                    {"GOLD", 2},
-                    {"SILVER", 3},
-                    {"BRONZE", 4},
+                    {"CHALLENGER", 1},
+                    {"GRANDMASTER", 2},
+                    {"MASTER", 3},
+                    {"DIAMOND", 4},
+                    {"EMERALD", 5},
+                    {"PLATINUM", 6},
+                    {"GOLD", 7},
+                    {"SILVER", 8},
+                    {"BRONZE", 9},
 
             };
             var customRankRank = new Dictionary<string, int>

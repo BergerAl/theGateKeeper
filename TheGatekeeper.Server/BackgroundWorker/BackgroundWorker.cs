@@ -14,7 +14,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IMongoCollection<StoredStandingsDaoV1> _standingsCollection;
         private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
         private readonly HttpClient _httpClient;
-        private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
+        private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-puuid/";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
         private readonly string riotSummonerByPuuid = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/";
         private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
@@ -54,7 +54,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     var players = await _playersCollection.Find(_ => true).ToListAsync();
                     foreach (var player in players)
                     {
-                        var leagueEntries = await GetLeagueEntryListDto(player.Summoner.id);
+                        var leagueEntries = await GetLeagueEntryListDto(player.Summoner.puuid);
                         if (leagueEntries.Count() > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
                         {
                             _logger.LogDebug($"Updating entries for {player.UserName}");
