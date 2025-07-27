@@ -44,22 +44,6 @@ export const fetchAllUsers = createAsyncThunk(
     }
 );
 
-export const getUserHistory = createAsyncThunk(
-    'theGateKeeper/getHistory',
-    async (userName: string) => {
-        const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/getHistory?userName=${userName}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        if (!response.ok) {
-            throw new Error(`There was an error connecting to Riot Api. Please check if your API key is valid and if the api is reachable`);
-        }
-
-        const data = await response.json();
-        return data;
-    }
-);
-
 export const healthCheck = createAsyncThunk(
     'theGateKeeper/healthChecker',
     async () => {

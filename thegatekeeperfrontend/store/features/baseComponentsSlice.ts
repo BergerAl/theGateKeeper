@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, getUserHistory, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
@@ -54,7 +54,7 @@ export interface ViewState {
     actualSelectedPage: number
     snackBarState: SnackBarState
     chartView: {
-        entry: RankTimeLineEntry
+        userName: string
         visible: boolean
     },
     frontEndInfo: FrontEndInfo[]
@@ -69,7 +69,7 @@ export const initialState: ViewState = {
     actualSelectedPage: 0,
     snackBarState: { text: "", status: SnackBarStatus.Ok },
     chartView: {
-        entry: {userName : "", rankTimeLine: []},
+        userName: "",
         visible: false
     },
     frontEndInfo: [],
@@ -80,16 +80,6 @@ export const initialState: ViewState = {
     appInfo: { usersOnline: 0 }
 };
 
-export interface RankTimeLineEntry {
-    userName: string
-    rankTimeLine: RankTimeLine[]
-}
-
-export interface RankTimeLine {
-    dateTime: string
-    rank: string
-    leaguePoints: number
-}
 
 export const viewStateSlice = createSlice({
     name: 'viewState',
@@ -117,7 +107,11 @@ export const viewStateSlice = createSlice({
         },
         closeChartView: (state) => {
             state.chartView.visible = false;
-            state.chartView.entry = { userName: "", rankTimeLine: [] };
+            state.chartView.userName = "";
+        },
+        setUserNameSelection: (state, action: PayloadAction<string>) => {
+            state.chartView.userName = action.payload;
+            state.chartView.visible = true;
         }
     },
     extraReducers(builder) {
@@ -158,14 +152,6 @@ export const viewStateSlice = createSlice({
         builder.addCase(fetchGateKeeperInfo.fulfilled, (state, action) => {
             state.gateKeeperInfo = action.payload
         });
-        builder.addCase(getUserHistory.fulfilled, (state, action) => {
-            state.chartView.entry = action.payload
-            state.chartView.visible = true
-        });
-        builder.addCase(getUserHistory.rejected, (state, _) => {
-            state.chartView.entry = {userName : "", rankTimeLine : []}
-            state.chartView.visible = false
-        });
     },
 });
 
@@ -175,7 +161,8 @@ export const {
     updateAppConfig,
     setIsMobileDevice,
     setUsersOnline,
-    closeChartView
+    closeChartView,
+    setUserNameSelection
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;
