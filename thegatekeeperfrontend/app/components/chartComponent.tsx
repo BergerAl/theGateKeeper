@@ -14,6 +14,7 @@ import {
     Tooltip as ChartJsTooltip,
     Legend
 } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 
 // Register Chart.js components
 ChartJS.register(
@@ -23,7 +24,8 @@ ChartJS.register(
     LineElement,
     Title,
     ChartJsTooltip,
-    Legend
+    Legend,
+    annotationPlugin
 );
 import { Typography } from '@mui/material';
 import { getTierRankLeaguePointsFromTotal } from '../common/tierCalculator';
@@ -38,6 +40,67 @@ export const ChartComponent: React.FC = () => {
     const dispatch = useAppDispatch();
     const [chartData, setChartData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const lpToTier = (lp: any) => {
+        switch (true) {
+            case lp >= 2700:
+                return 'Diamond 1';
+            case lp >= 2600:
+                return 'Diamond 2';
+            case lp >= 2500:
+                return 'Diamond 3';
+            case lp >= 2400:
+                return 'Diamond 4';
+            case lp >= 2300:
+                return 'Emerald 1';
+            case lp >= 2200:
+                return 'Emerald 2';
+            case lp >= 2100:
+                return 'Emerald 3';
+            case lp >= 2000:
+                return 'Emerald 4';
+            case lp >= 1900:
+                return 'Platinum 1';
+            case lp >= 1800:
+                return 'Platinum 2';
+            case lp >= 1700:
+                return 'Platinum 3';
+            case lp >= 1600:
+                return 'Platinum 4';
+            case lp >= 1500:
+                return 'Gold 1';
+            case lp >= 1400:
+                return 'Gold 2';
+            case lp >= 1300:
+                return 'Gold 3';
+            case lp >= 1200:
+                return 'Gold 4';
+            case lp >= 1100:
+                return 'Silver 1';
+            case lp >= 1000:
+                return 'Silver 2';
+            case lp >= 900:
+                return 'Silver 3';
+            case lp >= 800:
+                return 'Silver 4';
+            case lp >= 700:
+                return 'Bronze 1';
+            case lp >= 600:
+                return 'Bronze 2';
+            case lp >= 500:
+                return 'Bronze 3';
+            case lp >= 400:
+                return 'Bronze 4';
+            case lp >= 300:
+                return 'Iron 1';
+            case lp >= 200:
+                return 'Iron 2';
+            case lp >= 100:
+                return 'Iron 3';
+            default:
+                return `Iron 4`;
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -55,7 +118,7 @@ export const ChartComponent: React.FC = () => {
                 setChartData(
                     data?.rankTimeLine?.map((x: any) => ({
                         date: new Date(x.dateTime).toLocaleDateString(),
-                        leaguePoints: getTierRankLeaguePointsFromTotal(x.combinedPoints).leaguePoints,
+                        leaguePoints: x.combinedPoints,
                         rank: getTierRankLeaguePointsFromTotal(x.combinedPoints).rank,
                         tier: getTierRankLeaguePointsFromTotal(x.combinedPoints).tier
                     })) || []
@@ -124,43 +187,131 @@ export const ChartComponent: React.FC = () => {
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '40px 0' }}>Loading...</div>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Line
-                            data={{
-                                labels: chartData.map((d: any) => d.date),
-                                datasets: [
-                                    {
-                                        label: 'League Points',
-                                        data: chartData.map((d: any) => d.leaguePoints),
-                                        borderColor: '#8884d8',
-                                        backgroundColor: 'rgba(136,132,216,0.2)',
-                                        tension: 0.4,
-                                    },
-                                ],
-                            }}
-                            options={{
-                                responsive: true,
-                                plugins: {
-                                    legend: { display: true, position: 'top' },
-                                    title: { display: false },
-                                    tooltip: { enabled: true },
+                    <Line
+                        data={{
+                            labels: chartData.map((d) => d.date),
+                            datasets: [
+                                {
+                                    label: userName,
+                                    data: chartData.map((d) => d.leaguePoints),
+                                    borderColor: '#00bcd4',
+                                    backgroundColor: 'rgba(0,188,212,0.2)',
+                                    tension: 0.4,
                                 },
-                                scales: {
-                                    y: {
-                                        min: Math.min(...chartData.map((d) => d.leaguePoints)) - 25,
-                                        max: Math.max(...chartData.map((d) => d.leaguePoints)) + 25,
-                                        title: { display: true, text: 'League Points' },
-                                    },
-                                    x: {
-                                        title: { display: true, text: 'Date' },
-                                    },
+                            ],
+                        }}
+                        options={{
+                            responsive: true,
+                            plugins: {
+                                legend: { display: true, position: 'top' },
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const index = context.dataIndex;
+                                            const rank = context.chart.data.datasets[0].data[index];
+                                            // Find the corresponding chartData entry
+                                            const chartDataEntry = chartData[index];
+                                            return `${lpToTier(chartDataEntry?.leaguePoints) || ''} (${chartDataEntry?.leaguePoints%100} LP)`;
+                                        }
+                                    }
                                 },
-                            }}
-                        />
-                        <div style={{ marginLeft: 16, fontWeight: 'bold' }}>
-                            <Typography component="span" color="primary" >{chartData[chartData.length - 1]?.tier} {chartData[chartData.length - 1]?.rank}</Typography>
-                        </div>
-                    </div>
+                                annotation: {
+                                    annotations: (() => {
+                                        // Define tier boundaries and labels
+                                        const boundaries = [
+                                            { value: 100, label: 'Iron 3' },
+                                            { value: 200, label: 'Iron 2' },
+                                            { value: 300, label: 'Iron 1' },
+                                            { value: 400, label: 'Bronze 4' },
+                                            { value: 500, label: 'Bronze 3' },
+                                            { value: 600, label: 'Bronze 2' },
+                                            { value: 700, label: 'Bronze 1' },
+                                            { value: 800, label: 'Silver 4' },
+                                            { value: 900, label: 'Silver 3' },
+                                            { value: 1000, label: 'Silver 2' },
+                                            { value: 1100, label: 'Silver 1' },
+                                            { value: 1200, label: 'Gold 4' },
+                                            { value: 1300, label: 'Gold 3' },
+                                            { value: 1400, label: 'Gold 2' },
+                                            { value: 1500, label: 'Gold 1' },
+                                            { value: 1600, label: 'Platinum 4' },
+                                            { value: 1700, label: 'Platinum 3' },
+                                            { value: 1800, label: 'Platinum 2' },
+                                            { value: 1900, label: 'Platinum 1' },
+                                            { value: 2000, label: 'Emerald 4' },
+                                            { value: 2100, label: 'Emerald 3' },
+                                            { value: 2200, label: 'Emerald 2' },
+                                            { value: 2300, label: 'Emerald 1' },
+                                            { value: 2400, label: 'Diamond 4' },
+                                            { value: 2500, label: 'Diamond 3' },
+                                            { value: 2600, label: 'Diamond 2' },
+                                            { value: 2700, label: 'Diamond 1' },
+                                        ];
+                                        const annos: any = {};
+                                        boundaries.forEach((b, i) => {
+                                            annos[`tierBoundary${i}`] = {
+                                                type: 'line',
+                                                yMin: b.value,
+                                                yMax: b.value,
+                                                borderColor: 'rgba(200,200,200,0.7)',
+                                                borderWidth: 2,
+                                                borderDash: [6, 6]
+                                            };
+                                        });
+                                        return annos;
+                                    })(),
+                                },
+                            },
+                            scales: {
+                                y: {
+                                    ticks: {
+                                        stepSize: 100,
+                                        callback: function (value) {
+                                            // Only show the tier label at the boundary
+                                            switch (value) {
+                                                case 100: return 'Iron 3';
+                                                case 200: return 'Iron 2';
+                                                case 300: return 'Iron 1';
+                                                case 400: return 'Bronze 4';
+                                                case 500: return 'Bronze 3';
+                                                case 600: return 'Bronze 2';
+                                                case 700: return 'Bronze 1';
+                                                case 800: return 'Silver 4';
+                                                case 900: return 'Silver 3';
+                                                case 1000: return 'Silver 2';
+                                                case 1100: return 'Silver 1';
+                                                case 1200: return 'Gold 4';
+                                                case 1300: return 'Gold 3';
+                                                case 1400: return 'Gold 2';
+                                                case 1500: return 'Gold 1';
+                                                case 1600: return 'Platinum 4';
+                                                case 1700: return 'Platinum 3';
+                                                case 1800: return 'Platinum 2';
+                                                case 1900: return 'Platinum 1';
+                                                case 2000: return 'Emerald 4';
+                                                case 2100: return 'Emerald 3';
+                                                case 2200: return 'Emerald 2';
+                                                case 2300: return 'Emerald 1';
+                                                case 2400: return 'Diamond 4';
+                                                case 2500: return 'Diamond 3';
+                                                case 2600: return 'Diamond 2';
+                                                case 2700: return 'Diamond 1';
+                                                default: return '';
+                                            }
+                                        },
+                                    },
+                                    max: Math.max(...chartData.map((d) => d.leaguePoints))*1.05,
+                                    min: Math.min(...chartData.map((d) => d.leaguePoints))*0.95,
+                                    title: { display: true, text: 'Rank' },
+                                    grid: { drawOnChartArea: true },
+                                },
+                                x: {
+                                    title: { display: true, text: 'Date' },
+                                },
+                            },
+                        }}
+                    />
                 )}
             </div>
         </div>
