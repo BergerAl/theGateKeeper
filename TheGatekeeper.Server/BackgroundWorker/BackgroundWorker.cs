@@ -13,6 +13,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection;
         private readonly IMongoCollection<StoredStandingsDaoV1> _standingsCollection;
         private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
+        private readonly IMongoCollection<RankTimeLineEntryDaoV1> _historyCollection;
         private readonly HttpClient _httpClient;
         private readonly string riotLeagueApi = "https://euw1.api.riotgames.com/lol/league/v4/entries/by-puuid/";
         private readonly string riotIdByNameAndTag = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/";
@@ -31,6 +32,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _playersCollection = database.GetCollection<PlayerDaoV1>("players");
             _standingsCollection = database.GetCollection<StoredStandingsDaoV1>("standings");
             _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
+            _historyCollection = database.GetCollection<RankTimeLineEntryDaoV1>("ranktimeline");
             _riotApi = riotApi;
             _webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
         }
@@ -55,15 +57,54 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     foreach (var player in players)
                     {
                         var leagueEntries = await GetLeagueEntryListDto(player.Summoner.puuid);
-                        if (leagueEntries.Count() > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
+                        if (leagueEntries.Count > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
                         {
                             _logger.LogDebug($"Updating entries for {player.UserName}");
                             var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == player.UserName && u.Tag == player.Tag);
                             var update = Builders<PlayerDaoV1>.Update.Set(m => m.LeagueEntries, leagueEntries);
                             _playersCollection.UpdateOne(filter, update);
                         }
+                        if (leagueEntries.Count > 0)
+                        {
+                            _logger.LogDebug($"Updating rank time line entries for {player.UserName}");
+                            var historyFilter = Builders<RankTimeLineEntryDaoV1>.Filter.Where(u => u.UserName == player.UserName);
+                            var historyEntry = await _historyCollection.Find(historyFilter).FirstOrDefaultAsync();
+                            var currentRank = leagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First().rank;
+                            var currentLeaguePoints = leagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First().leaguePoints;
+
+                            var rankTimeLine = new RankTimeLineDaoV1()
+                            {
+                                DateTime = DateTime.UtcNow,
+                                Rank = currentRank,
+                                LeaguePoints = currentLeaguePoints
+                            };
+
+                            if (historyEntry == null)
+                            {
+                                // Insert new entry if not exists
+                                var newEntry = new RankTimeLineEntryDaoV1
+                                {
+                                    UserName = player.UserName,
+                                    RankTimeLine = [rankTimeLine]
+                                };
+                                await _historyCollection.InsertOneAsync(newEntry);
+                            }
+                            else
+                            {
+                                var lastEntry = historyEntry.RankTimeLine.Last();
+
+                                if (lastEntry.LeaguePoints != currentLeaguePoints || lastEntry.Rank != currentRank || lastEntry.DateTime.Date != DateTime.UtcNow.Date)
+                                {
+                                    // Update existing entry
+                                    var historyUpdate = Builders<RankTimeLineEntryDaoV1>.Update.AddToSet(
+                                        entry => entry.RankTimeLine, rankTimeLine
+                                    );
+                                    _historyCollection.UpdateOne(historyFilter, historyUpdate);
+                                }
+                            }
+                        }
                     }
-                    await NotifyDiscordGateKeeperPlaying();
+                    //await NotifyDiscordGateKeeperPlaying();
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
@@ -158,10 +199,10 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var response = await _httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return [];
+                    return []; // Return an empty list instead of null
                 }
                 var content = await response.Content.ReadFromJsonAsync<LeagueEntryDtoV1[]>().ConfigureAwait(false);
-                return content.ToList();
+                return content?.ToList() ?? []; // Handle potential null content
             }
             catch (Exception e)
             {
@@ -198,7 +239,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (swaps.Count > 0)
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
-                    await NotifyDiscord(swaps).ConfigureAwait(false);
+                    //await NotifyDiscord(swaps).ConfigureAwait(false);
                 }
             }
             catch (Exception e)

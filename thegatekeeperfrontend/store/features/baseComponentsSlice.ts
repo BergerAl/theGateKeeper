@@ -1,16 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, getUserHistory, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
 
 export enum SnackBarStatus {
     Ok,
     Warning,
     Error
-}
-
-export enum ModalTypeDialog {
-    None,
-    WorkpieceCreation,
-    DeleteWorkpiece
 }
 
 export enum DisplayedView {
@@ -59,8 +53,8 @@ export interface AppConfigurationDtoV1 {
 export interface ViewState {
     actualSelectedPage: number
     snackBarState: SnackBarState
-    modalDialog: {
-        modalDialogType: ModalTypeDialog
+    chartView: {
+        entry: RankTimeLineEntry
         visible: boolean
     },
     frontEndInfo: FrontEndInfo[]
@@ -74,8 +68,8 @@ export interface ViewState {
 export const initialState: ViewState = {
     actualSelectedPage: 0,
     snackBarState: { text: "", status: SnackBarStatus.Ok },
-    modalDialog: {
-        modalDialogType: ModalTypeDialog.None,
+    chartView: {
+        entry: {userName : "", rankTimeLine: []},
         visible: false
     },
     frontEndInfo: [],
@@ -83,8 +77,19 @@ export const initialState: ViewState = {
     appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, displayResultsBar: false },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false,
-    appInfo: {usersOnline: 0}
+    appInfo: { usersOnline: 0 }
 };
+
+export interface RankTimeLineEntry {
+    userName: string
+    rankTimeLine: RankTimeLine[]
+}
+
+export interface RankTimeLine {
+    dateTime: string
+    rank: string
+    leaguePoints: number
+}
 
 export const viewStateSlice = createSlice({
     name: 'viewState',
@@ -92,9 +97,6 @@ export const viewStateSlice = createSlice({
     reducers: {
         setSnackBarState: (state, action: PayloadAction<SnackBarState>) => {
             state.snackBarState = action.payload;
-        },
-        setModalDialogState: (state, action: PayloadAction<{ visible: boolean, modalDialogType?: ModalTypeDialog }>) => {
-            state.modalDialog = { visible: action.payload.visible, modalDialogType: action.payload?.modalDialogType ? action.payload?.modalDialogType : ModalTypeDialog.None };
         },
         updateUsersIfBlocked: (state, action: PayloadAction<FrontEndInfo[]>) => {
             action.payload.forEach(element => {
@@ -113,6 +115,10 @@ export const viewStateSlice = createSlice({
         setUsersOnline: (state, action: PayloadAction<GateKeeperAppInfo>) => {
             state.appInfo = action.payload
         },
+        closeChartView: (state) => {
+            state.chartView.visible = false;
+            state.chartView.entry = { userName: "", rankTimeLine: [] };
+        }
     },
     extraReducers(builder) {
         builder.addCase(fetchAllUsers.fulfilled, (state, action) => {
@@ -152,16 +158,24 @@ export const viewStateSlice = createSlice({
         builder.addCase(fetchGateKeeperInfo.fulfilled, (state, action) => {
             state.gateKeeperInfo = action.payload
         });
+        builder.addCase(getUserHistory.fulfilled, (state, action) => {
+            state.chartView.entry = action.payload
+            state.chartView.visible = true
+        });
+        builder.addCase(getUserHistory.rejected, (state, _) => {
+            state.chartView.entry = {userName : "", rankTimeLine : []}
+            state.chartView.visible = false
+        });
     },
 });
 
 export const {
     setSnackBarState,
-    setModalDialogState,
     updateUsersIfBlocked,
     updateAppConfig,
     setIsMobileDevice,
-    setUsersOnline
+    setUsersOnline,
+    closeChartView
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

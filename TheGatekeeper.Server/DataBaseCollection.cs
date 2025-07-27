@@ -92,4 +92,24 @@ namespace TheGateKeeper.Server
         [JsonPropertyName("name")]
         public string Name { get; set; } = "";
     }
+
+    [BsonIgnoreExtraElements]
+    public class RankTimeLineEntryDaoV1
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Id { get; set; }
+
+        [JsonPropertyName("userName")]
+        public string UserName { get; set; } = "";
+        public List<RankTimeLineDaoV1> RankTimeLine { get; set; } = [];
+    }
+
+    [BsonIgnoreExtraElements]
+    public class RankTimeLineDaoV1
+    {
+        public DateTime DateTime { get; set; }
+        public string Rank { get; set; } = "";
+        public int LeaguePoints { get; set; } = 0;
+    }
 }

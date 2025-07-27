@@ -9,12 +9,13 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { voteForUser } from '@/store/backEndCalls';
+import { getUserHistory, voteForUser } from '@/store/backEndCalls';
 import { DisplayedView } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
 import { NavigationTab } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
+import { ChartComponent } from './chartComponent';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
@@ -24,6 +25,7 @@ export const TheGateKeeper: React.FC = () => {
   const dispatch = useAppDispatch()
   return (
     <>
+      <ChartComponent />
       <ResponsiveAppBar />
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.LeagueStandings &&
         <TableContainer component={Paper} >
@@ -44,7 +46,7 @@ export const TheGateKeeper: React.FC = () => {
                   key={row.name}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 }, backgroundColor: row.name == gateKeeperName ? "#FF474C" : "default" }}
                 >
-                  <TableCell component="th" scope="row">
+                  <TableCell component="th" scope="row" onPointerDown={() => dispatch(getUserHistory(row.name))}>
                     {row.name}
                   </TableCell>
                   <TableCell align="right">{row.tier}</TableCell>

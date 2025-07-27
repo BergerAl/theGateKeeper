@@ -49,6 +49,12 @@ namespace TheGateKeeper.Server.InfrastructureService
                     MaxSize = null,
                     MaxDocuments = null
                 });
+                await _database.CreateCollectionAsync("ranktimeline", new CreateCollectionOptions
+                {
+                    Capped = false,
+                    MaxSize = null,
+                    MaxDocuments = null
+                });
                 var collection = _database.GetCollection<StoredStandingsDaoV1>("standings");
                 var filter = Builders<StoredStandingsDaoV1>.Filter.Eq("_id", "standingstable");
                 if (!await collection.Find(filter).AnyAsync())

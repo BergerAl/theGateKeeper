@@ -24,6 +24,12 @@ namespace TheGateKeeper.Controllers
             return await _voteService.GetVoteStandings();
         }
 
+        [HttpGet("getHistory")]
+        public async Task<RankTimeLineEntryDaoV1> GetRankHistory([FromQuery] string userName)
+        {
+            return await _riotApi.GetHistory(userName);
+        }
+
         [HttpPost("voteForUser")]
         public async Task<IActionResult> VoteForUser([FromBody] string userName)
         {
