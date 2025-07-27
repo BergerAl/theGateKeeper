@@ -109,7 +109,6 @@ namespace TheGateKeeper.Server
     public class RankTimeLineDaoV1
     {
         public DateTime DateTime { get; set; }
-        public string Rank { get; set; } = "";
-        public int LeaguePoints { get; set; } = 0;
+        public int CombinedPoints { get; set; } = 0;
     }
 }

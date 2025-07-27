@@ -69,14 +69,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             _logger.LogDebug($"Updating rank time line entries for {player.UserName}");
                             var historyFilter = Builders<RankTimeLineEntryDaoV1>.Filter.Where(u => u.UserName == player.UserName);
                             var historyEntry = await _historyCollection.Find(historyFilter).FirstOrDefaultAsync();
+                            var currentTier = leagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First().tier;
                             var currentRank = leagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First().rank;
                             var currentLeaguePoints = leagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First().leaguePoints;
 
                             var rankTimeLine = new RankTimeLineDaoV1()
                             {
                                 DateTime = DateTime.UtcNow,
-                                Rank = currentRank,
-                                LeaguePoints = currentLeaguePoints
+                                CombinedPoints = GetCombinedPoints(currentTier, currentRank, currentLeaguePoints),
                             };
 
                             if (historyEntry == null)
@@ -93,7 +93,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             {
                                 var lastEntry = historyEntry.RankTimeLine.Last();
 
-                                if (lastEntry.LeaguePoints != currentLeaguePoints || lastEntry.Rank != currentRank || lastEntry.DateTime.Date != DateTime.UtcNow.Date)
+                                if (lastEntry.CombinedPoints != GetCombinedPoints(currentTier, currentRank, currentLeaguePoints) || lastEntry.DateTime.Date != DateTime.UtcNow.Date)
                                 {
                                     // Update existing entry
                                     var historyUpdate = Builders<RankTimeLineEntryDaoV1>.Update.AddToSet(
@@ -104,7 +104,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             }
                         }
                     }
-                    //await NotifyDiscordGateKeeperPlaying();
+                    await NotifyDiscordGateKeeperPlaying();
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
 
@@ -239,7 +239,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (swaps.Count > 0)
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
-                    //await NotifyDiscord(swaps).ConfigureAwait(false);
+                    await NotifyDiscord(swaps).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -281,6 +281,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
         private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers)
         {
+#if DEBUG
+            return;
+#endif
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)
             {
@@ -300,6 +303,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
         private async Task NotifyDiscordGateKeeperPlaying()
         {
+#if DEBUG
+            return;
+#endif
             try
             {
                 var emptyFilter = Builders<GateKeeperInformationDaoV1>.Filter.Empty;
@@ -339,6 +345,39 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 throw;
             }
 
+        }
+
+        private static int GetCombinedPoints(string tier, string rank, int leaguePoints)
+        {
+            var tierPoints = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "BRONZE", 400 },
+                { "SILVER", 800 },
+                { "GOLD", 1200 },
+                { "PLATINUM", 1600 },
+                { "EMERALD", 2000 },
+                { "DIAMOND", 2400 },
+                { "MASTER", 2800 },
+                { "GRANDMASTER", 3200 },
+                { "CHALLENGER", 3600 }
+            };
+
+            var rankPoints = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "IV", 0 },
+                { "III", 100 },
+                { "II", 200 },
+                { "I", 300 }
+            };
+
+            int total = 0;
+            if (tierPoints.TryGetValue(tier, out var tPoints))
+                total += tPoints;
+            if (rankPoints.TryGetValue(rank, out var rPoints))
+                total += rPoints;
+
+            total += leaguePoints;
+            return total;
         }
     }
 }

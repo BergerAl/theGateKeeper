@@ -47,7 +47,20 @@ export const TheGateKeeper: React.FC = () => {
                   key={row.name}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 }, backgroundColor: row.name == gateKeeperName ? "#FF474C" : "default" }}
                 >
-                  <TableCell component="th" scope="row" onPointerDown={() => dispatch(setUserNameSelection(row.name))}>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    onPointerDown={() => dispatch(setUserNameSelection(row.name))}
+                    sx={{ cursor: 'pointer', position: 'relative', userSelect: 'none', transition: 'background 0.2s' }}
+                    onMouseEnter={e => {
+                      const icon = e.currentTarget.querySelector('.hand-hover-icon');
+                      if (icon) (icon as HTMLElement).style.opacity = '1';
+                    }}
+                    onMouseLeave={e => {
+                      const icon = e.currentTarget.querySelector('.hand-hover-icon');
+                      if (icon) (icon as HTMLElement).style.opacity = '0';
+                    }}
+                  >
                     {row.name}
                   </TableCell>
                   <TableCell align="right">{row.tier}</TableCell>

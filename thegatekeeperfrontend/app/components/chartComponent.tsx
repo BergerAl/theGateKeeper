@@ -26,6 +26,7 @@ ChartJS.register(
     Legend
 );
 import { Typography } from '@mui/material';
+import { getTierRankLeaguePointsFromTotal } from '../common/tierCalculator';
 
 
 
@@ -53,7 +54,9 @@ export const ChartComponent: React.FC = () => {
                 setChartData(
                     data?.rankTimeLine?.map((x: any) => ({
                         date: new Date(x.dateTime).toLocaleDateString(),
-                        value: x.leaguePoints
+                        leaguePoints: getTierRankLeaguePointsFromTotal(x.combinedPoints).leaguePoints,
+                        rank: getTierRankLeaguePointsFromTotal(x.combinedPoints).rank,
+                        tier: getTierRankLeaguePointsFromTotal(x.combinedPoints).tier
                     })) || []
                 );
             } catch (err: any) {
@@ -127,7 +130,7 @@ export const ChartComponent: React.FC = () => {
                                 datasets: [
                                     {
                                         label: 'League Points',
-                                        data: chartData.map((d: any) => d.value),
+                                        data: chartData.map((d: any) => d.leaguePoints),
                                         borderColor: '#8884d8',
                                         backgroundColor: 'rgba(136,132,216,0.2)',
                                         tension: 0.4,
@@ -143,8 +146,8 @@ export const ChartComponent: React.FC = () => {
                                 },
                                 scales: {
                                     y: {
-                                        min: 0,
-                                        max: 100,
+                                        min: Math.min(...chartData.map((d) => d.leaguePoints)) - 25,
+                                        max: Math.max(...chartData.map((d) => d.leaguePoints)) + 25,
                                         title: { display: true, text: 'League Points' },
                                     },
                                     x: {
@@ -154,7 +157,7 @@ export const ChartComponent: React.FC = () => {
                             }}
                         />
                         <div style={{ marginLeft: 16, fontWeight: 'bold' }}>
-                            <Typography component="span" color="primary" >{"Select Theme"}</Typography>
+                            <Typography component="span" color="primary" >{chartData[chartData.length - 1]?.tier} {chartData[chartData.length - 1]?.rank}</Typography>
                         </div>
                     </div>
                 )}
