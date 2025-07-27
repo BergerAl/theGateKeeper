@@ -27,6 +27,7 @@ ChartJS.register(
 );
 import { Typography } from '@mui/material';
 import { getTierRankLeaguePointsFromTotal } from '../common/tierCalculator';
+import { domainUrlPrefix } from '@/store/backEndCalls';
 
 
 
@@ -46,7 +47,7 @@ export const ChartComponent: React.FC = () => {
                     setLoading(false);
                     return;
                 }
-                const response = await fetch(`/api/TheGateKeeper/getHistory?userName=${encodeURIComponent(userName)}`);
+                const response = await fetch(`${domainUrlPrefix()}/api/TheGateKeeper/getHistory?userName=${encodeURIComponent(userName)}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch user history');
                 }

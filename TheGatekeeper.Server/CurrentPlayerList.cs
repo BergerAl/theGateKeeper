@@ -10,6 +10,10 @@
                     Tag = "EUW"
                 },
                 new RiotUser() {
+                    Name = "xVanitySixx",
+                    Tag = "EUW"
+                },
+                new RiotUser() {
                     Name = "Major Hefeweizen",
                     Tag = "xdd"
                 },
