@@ -268,37 +268,7 @@ export const ChartComponent: React.FC = () => {
                                     ticks: {
                                         stepSize: 100,
                                         callback: function (value) {
-                                            // Only show the tier label at the boundary
-                                            switch (value) {
-                                                case 100: return 'Iron 3';
-                                                case 200: return 'Iron 2';
-                                                case 300: return 'Iron 1';
-                                                case 400: return 'Bronze 4';
-                                                case 500: return 'Bronze 3';
-                                                case 600: return 'Bronze 2';
-                                                case 700: return 'Bronze 1';
-                                                case 800: return 'Silver 4';
-                                                case 900: return 'Silver 3';
-                                                case 1000: return 'Silver 2';
-                                                case 1100: return 'Silver 1';
-                                                case 1200: return 'Gold 4';
-                                                case 1300: return 'Gold 3';
-                                                case 1400: return 'Gold 2';
-                                                case 1500: return 'Gold 1';
-                                                case 1600: return 'Platinum 4';
-                                                case 1700: return 'Platinum 3';
-                                                case 1800: return 'Platinum 2';
-                                                case 1900: return 'Platinum 1';
-                                                case 2000: return 'Emerald 4';
-                                                case 2100: return 'Emerald 3';
-                                                case 2200: return 'Emerald 2';
-                                                case 2300: return 'Emerald 1';
-                                                case 2400: return 'Diamond 4';
-                                                case 2500: return 'Diamond 3';
-                                                case 2600: return 'Diamond 2';
-                                                case 2700: return 'Diamond 1';
-                                                default: return '';
-                                            }
+                                            return lpToTier(value)
                                         },
                                     },
                                     max: Math.max(...chartData.map((d) => d.leaguePoints))*1.05,
