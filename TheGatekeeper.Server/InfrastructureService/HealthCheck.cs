@@ -8,7 +8,7 @@ namespace TheGateKeeper.Server.InfrastructureService
         private readonly HttpClient _httpClient;
 
         private readonly IRiotApi _riotApi;
-        private readonly string lolStatusApi = "https://europe.api.riotgames.com/lor/status/v1/platform-data?api_key=";
+        private readonly string lolStatusApi = "https://euw1.api.riotgames.com/lol/status/v4/platform-data?api_key=";
 
         public HealthCheck(IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi)
         {
