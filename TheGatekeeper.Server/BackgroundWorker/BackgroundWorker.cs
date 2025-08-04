@@ -50,13 +50,13 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         if(_playersCollection.CountDocuments(filter) == 0)
                         {
                             _logger.LogDebug($"Adding new player to database {item.Name} #{item.Tag}");
-                            await AddNewDataBaseEntry(item.Name, item.Tag);
+                            await AddNewDataBaseEntry(item.Name, item.Tag, stoppingToken);
                         }
                     }
                     var players = await _playersCollection.Find(_ => true).ToListAsync();
                     foreach (var player in players)
                     {
-                        var leagueEntries = await GetLeagueEntryListDto(player.Summoner.puuid);
+                        var leagueEntries = await GetLeagueEntryListDto(player.Summoner.puuid, stoppingToken);
                         if (leagueEntries.Count > 0 && leagueEntries.Except(player.LeagueEntries).Count() > 0)
                         {
                             _logger.LogDebug($"Updating entries for {player.UserName}");
@@ -104,17 +104,21 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             }
                         }
                     }
-                    await NotifyDiscordGateKeeperPlaying();
+                    await NotifyDiscordGateKeeperPlaying(stoppingToken);
                     var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
-                    await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList()).ConfigureAwait(false);
+                    await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList(), stoppingToken).ConfigureAwait(false);
 
                     _logger.LogInformation($"BackgroundWorker finished process successfully");
 
                 }
+                catch (TaskCanceledException ex)
+                {
+                    _logger.LogWarning(ex, "HTTP request timed out or was canceled");
+                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                }
                 catch (OperationCanceledException)
                 {
                     _logger.LogWarning("Data fetch operation cancelled");
-                    throw;
                 }
                 catch (HttpRequestException ex)
                 {
@@ -133,11 +137,11 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task AddNewDataBaseEntry(string userName, string tag)
+        private async Task AddNewDataBaseEntry(string userName, string tag, CancellationToken stoppingToken)
         {
-            var accountDto = await GetAccountDto(userName, tag);
-            var summonerDto = await GetSummonerDto(accountDto.puuid);
-            var LeagueEntryList = await GetLeagueEntryListDto(summonerDto.id);
+            var accountDto = await GetAccountDto(userName, tag, stoppingToken);
+            var summonerDto = await GetSummonerDto(accountDto.puuid, stoppingToken);
+            var LeagueEntryList = await GetLeagueEntryListDto(summonerDto.id, stoppingToken);
             await _playersCollection.InsertOneAsync(new PlayerDaoV1() { 
                 UserName = userName, 
                 Tag = tag, 
@@ -148,12 +152,31 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }).ConfigureAwait(false);
         }
 
-        private async Task<AccountDtoV1> GetAccountDto(string userName, string tag)
+        // This method updates the puuid for a player in the database. It was used after the api key changed to another class
+        private async Task UpdatePuuidForPlayerAsync(string userName, string tag, CancellationToken stoppingToken)
+        {
+            // Fetch latest account and summoner data
+            var accountDto = await GetAccountDto(userName, tag, stoppingToken);
+            var summonerDto = await GetSummonerDto(accountDto.puuid, stoppingToken);
+
+            // Build filter for the player
+            var filter = Builders<PlayerDaoV1>.Filter.Where(u => u.UserName == userName && u.Tag == tag);
+
+            // Build update for puuid in Account and Summoner
+            var update = Builders<PlayerDaoV1>.Update
+                .Set(p => p.Account.puuid, accountDto.puuid)
+                .Set(p => p.Summoner.puuid, summonerDto.puuid);
+
+            // Update the document in the collection
+            await _playersCollection.UpdateOneAsync(filter, update);
+        }
+
+        private async Task<AccountDtoV1> GetAccountDto(string userName, string tag, CancellationToken stoppingToken)
         {
             try
             {
                 var url = $"{riotIdByNameAndTag}{userName}/{tag}?api_key={_riotApi.GetCurrentApiKey()}";
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
@@ -169,13 +192,13 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task<SummonerDtoV1> GetSummonerDto(string puuid)
+        private async Task<SummonerDtoV1> GetSummonerDto(string puuid, CancellationToken stoppingToken)
         {
             try
             {
 
                 var url = $"{riotSummonerByPuuid}{puuid}?api_key={_riotApi.GetCurrentApiKey()}";
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
@@ -191,12 +214,12 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task<List<LeagueEntryDtoV1>> GetLeagueEntryListDto(string id)
+        private async Task<List<LeagueEntryDtoV1>> GetLeagueEntryListDto(string id, CancellationToken stoppingToken)
         {
             try
             {
                 var url = $"{riotLeagueApi}{id}?api_key={_riotApi.GetCurrentApiKey()}";
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     return []; // Return an empty list instead of null
@@ -211,7 +234,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task CompareStandings(List<Standings> newStandings)
+        private async Task CompareStandings(List<Standings> newStandings, CancellationToken stoppingToken)
         {
             try
             {
@@ -239,7 +262,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 if (swaps.Count > 0)
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
-                    await NotifyDiscord(swaps).ConfigureAwait(false);
+                    await NotifyDiscord(swaps, stoppingToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -279,7 +302,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers)
+        private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers, CancellationToken stoppingToken)
         {
 #if DEBUG
             return;
@@ -298,10 +321,10 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var json = JsonSerializer.Serialize(payload);
             var contentData = new StringContent(json, Encoding.UTF8, "application/json");
 
-            await _httpClient.PostAsync(_webhookUrl, contentData);
+            await _httpClient.PostAsync(_webhookUrl, contentData, stoppingToken);
         }
 
-        private async Task NotifyDiscordGateKeeperPlaying()
+        private async Task NotifyDiscordGateKeeperPlaying(CancellationToken stoppingToken)
         {
 #if DEBUG
             return;
@@ -312,7 +335,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var gateKeeperInfo = await _gateKeeperCollection.Find(_ => true).FirstAsync();
                 var gateKeeper = _playersCollection.Find(x => x.UserName.Equals(gateKeeperInfo.Name)).First();
                 var url = $"{riotSpectatorId}{gateKeeper.Account.puuid}?api_key={_riotApi.GetCurrentApiKey()}";
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     var update = Builders<GateKeeperInformationDaoV1>.Update.Set(doc => doc.GameId, 0);
@@ -337,7 +360,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var json = JsonSerializer.Serialize(payload);
                 var contentData = new StringContent(json, Encoding.UTF8, "application/json");
 
-                await _httpClient.PostAsync(_webhookUrl, contentData);
+                await _httpClient.PostAsync(_webhookUrl, contentData, stoppingToken);
             }
             catch (Exception ex)
             {
