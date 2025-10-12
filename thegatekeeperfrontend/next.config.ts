@@ -6,7 +6,6 @@ module.exports = (phase, { defaultConfig }) => {
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
       env: {
-        adminAccess: "true"
       },
       devIndicators: false,
       async rewrites() {

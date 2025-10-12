@@ -12,7 +12,7 @@ import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '@/store/features/baseComponentsSlice';
 import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
-
+import { useAuth } from 'react-oidc-context';
 interface SelectOption {
     value: string
     label: string
@@ -28,6 +28,21 @@ const AdminControl = () => {
     const actualConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
     const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
+    const auth = useAuth();
+
+    // Check for Admin role in access token
+    const hasAdminRole = (Array.isArray(auth.user?.profile?.roles) && auth.user.profile.roles.includes('Admin')) ||
+        (auth.user?.access_token && (() => {
+            try {
+                const payload = JSON.parse(atob(auth.user.access_token.split('.')[1]));
+                // Check both realm_access and resource_access
+                return (Array.isArray(payload.realm_access?.roles) && payload.realm_access.roles.includes('Admin')) ||
+                    Object.values(payload.resource_access || {}).some((r: any) => Array.isArray(r.roles) && r.roles.includes('Admin'));
+            } catch {
+                return false;
+            }
+        })());
+
     useEffect(() => {
         dispatch(fetchCurrentVoteStandings())
         // eslint-disable-next-line
@@ -69,6 +84,8 @@ const AdminControl = () => {
             return newConfig
         })
     }
+
+    if (!hasAdminRole) return null;
 
     return (
         <>
@@ -158,7 +175,7 @@ const AdminControl = () => {
                     </Table>
                 </TableContainer>
                 <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button>
-                <Button onPointerDown={() => dispatch(updateConfiguration(appConfig))} variant="contained">{"Save config"}</Button>
+                <Button onPointerDown={() => dispatch(updateConfiguration({ appConfig, token: auth.user?.access_token }))} variant="contained">{"Save config"}</Button>
             </SwipeableDrawer>
         </>
     )

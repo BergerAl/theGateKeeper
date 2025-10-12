@@ -8,14 +8,6 @@ export const domainUrlPrefix = () => {
     }
 }
 
-export const adminAccess = () => {
-    //This is just a workaround as long as we don't have a user management 
-    if (process.env.adminAccess == "true") {
-        return true
-    }
-    return false;
-}
-
 export const voteForUser = createAsyncThunk(
     'theGateKeeper/voteForUser',
     async (userName: string) => {
@@ -71,10 +63,13 @@ export const fetchConfiguration = createAsyncThunk(
 
 export const updateConfiguration = createAsyncThunk(
     'theGateKeeper/setAppConfig',
-    async (appConfig: AppConfigurationDtoV1) => {
+    async ({ appConfig, token }: { appConfig: AppConfigurationDtoV1, token: string | undefined }) => {
         const response = await fetch(`${domainUrlPrefix()}/api/AppConfiguration`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(appConfig)
         })
         if (!response.ok) {

@@ -141,7 +141,7 @@ export const viewStateSlice = createSlice({
             state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, displayResultsBar: false };
         });
         builder.addCase(updateConfiguration.fulfilled, (state, action) => {
-            state.appConfiguration = action.meta.arg;
+            state.appConfiguration = action.meta.arg.appConfig;
         });
         builder.addCase(updateConfiguration.rejected, (state, action) => {
             state.snackBarState = { text: `Setting state with value ${action.meta.arg} didn't work`, status: SnackBarStatus.Error };
