@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
@@ -30,6 +31,7 @@ namespace TheGateKeeper.Controllers
             return await _riotApi.GetHistory(userName);
         }
 
+        [Authorize]
         [HttpPost("voteForUser")]
         public async Task<IActionResult> VoteForUser([FromBody] string userName)
         {
@@ -52,6 +54,7 @@ namespace TheGateKeeper.Controllers
 
         }
 
+        [Authorize]
         [HttpPost("apiKey")]
         public IActionResult AddNewApiKey([FromBody] string apiKey)
         {

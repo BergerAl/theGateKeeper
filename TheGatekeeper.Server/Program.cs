@@ -1,3 +1,5 @@
+using Keycloak.AuthServices.Authentication;
+using Keycloak.AuthServices.Authorization;
 using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -74,6 +76,10 @@ builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
 builder.Services.AddSignalR();
+
+builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
+builder.Services.AddAuthorization().AddKeycloakAuthorization(builder.Configuration);
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
      {
@@ -101,6 +107,7 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
 app.UseHttpsRedirection();
 app.UseRouting();
 app.MapHub<EventHub>("/backendUpdate");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

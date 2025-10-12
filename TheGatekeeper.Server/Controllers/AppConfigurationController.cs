@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.AppControl;
@@ -25,7 +26,7 @@ namespace TheGateKeeper.Controllers
             return Ok(config);
         }
 
-
+        [Authorize]
         [HttpPut]
         public async Task<ActionResult> UpdateConfiguration([FromBody] AppConfigurationDtoV1 config)
         {

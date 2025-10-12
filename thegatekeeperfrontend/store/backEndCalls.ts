@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AppConfigurationDtoV1 } from "./features/baseComponentsSlice";
-
 export const domainUrlPrefix = () => {
     if (process.env.urlPrefix == undefined) {
         return ''

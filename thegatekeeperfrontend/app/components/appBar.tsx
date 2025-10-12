@@ -9,18 +9,23 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { domainUrlPrefix } from '@/store/backEndCalls';
 import { Tooltip } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import { translateUsersOnline } from '../common/common';
+import { useAuth } from 'react-oidc-context';
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const resultsPageEnabled = useAppSelector(state => state.viewStateSlice.appConfiguration.displayResultsBar);
     const usersOnline = useAppSelector(state => state.viewStateSlice.appInfo.usersOnline)
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const auth = useAuth();
+
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
     };
@@ -36,12 +41,20 @@ function ResponsiveAppBar() {
     const handleCloseNavMenu = () => {
         setAnchorElNav(null);
     };
+
+    const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
     const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VoteStandings || resultsPageEnabled)
     return (
         <AppBar position="static">
             <Container style={{ maxWidth: '100%' }}>
                 <Toolbar disableGutters>
-                    {/* TODO: Add LOGO */}
                     {/* <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} /> */}
                     <Typography
                         variant="h6"
@@ -155,36 +168,46 @@ function ResponsiveAppBar() {
                         ))}
                     </Box>
                     {/* User Button */}
-                    {/* <Box sx={{ flexGrow: 0 }}>
+                    <Box sx={{ flexGrow: 0 }}>
+                        {auth && (
+                            <div>
+                                <IconButton
+                                    size="large"
+                                    aria-label="account of current user"
+                                    aria-controls="menu-appbar"
+                                    aria-haspopup="true"
+                                    onClick={handleMenu}
+                                    color="inherit"
+                                >
+                                    <AccountCircle />
+                                    <Typography>{auth.user?.profile.name}</Typography>
+                                </IconButton>
+                                <Menu
+                                    id="menu-appbar"
+                                    anchorEl={anchorEl}
+                                    anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }}
+                                    open={Boolean(anchorEl)}
+                                    onClose={handleClose}
+                                >
+                                    {auth.isAuthenticated ? (
+                                        <MenuItem onClick={() => auth.signoutRedirect()}>Logout</MenuItem>
+                                    ) : (
+                                        <MenuItem onClick={() => auth.signinRedirect()}>Login</MenuItem>
 
-                        <Tooltip title="Open settings">
-                            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-                            </IconButton>
-                        </Tooltip>
-                        <Menu
-                            sx={{ mt: '45px' }}
-                            id="menu-appbar"
-                            anchorEl={anchorElUser}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(anchorElUser)}
-                            onClose={handleCloseUserMenu}
-                        >
-                            {settings.map((setting) => (
-                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                                    <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    </Box> */}
+                                    )}
+                                </Menu>
+                            </div>
+                        )}
+
+                    </Box>
                 </Toolbar>
             </Container>
         </AppBar>

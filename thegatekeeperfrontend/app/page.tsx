@@ -12,12 +12,21 @@ import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
 import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess, fetchGateKeeperInfo } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
+import { AuthProvider } from "react-oidc-context";
 
 function App() {
   const dispatch = useAppDispatch()
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.userSlice.selectedTheme)
+  const oidcConfig = {
+    authority: "http://localhost:8892/realms/thegatekeeper",
+    client_id: "gateKeeperAppfrontEndClient",
+    redirect_uri: "http://localhost:3000/",
+    response_type: "code",
+    automaticSilentRenew: true,
+    loadUserInfo: true,
+  };
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
@@ -68,16 +77,18 @@ function App() {
           theme === 'dark' ? darkTheme.palette.background.paper :
             vibrantTheme.palette.background.paper, minHeight: '98vh'
       }}>
-        <CombinedContext.Provider value={value}>
-          <ThemeProvider theme={theme === 'light' ? lightTheme :
-            theme === 'dark' ? darkTheme :
-              vibrantTheme}>
-            <SimpleSnackbar />
-            {adminAccess() && <AdminControl />}
-            <TheGateKeeper />
-            <ControlPanel />
-          </ThemeProvider>
-        </CombinedContext.Provider>
+        <AuthProvider {...oidcConfig}>
+          <CombinedContext.Provider value={value}>
+            <ThemeProvider theme={theme === 'light' ? lightTheme :
+              theme === 'dark' ? darkTheme :
+                vibrantTheme}>
+              <SimpleSnackbar />
+              {adminAccess() && <AdminControl />}
+              <TheGateKeeper />
+              <ControlPanel />
+            </ThemeProvider>
+          </CombinedContext.Provider>
+        </AuthProvider>
       </body>
     </html>
   );

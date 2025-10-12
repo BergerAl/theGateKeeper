@@ -32,6 +32,7 @@ TheGateKeeper.Server/obj/**/*
 *.user
 api_key
 secrets/**
+backups/**
 
 /.pnp
 .pnp.*
