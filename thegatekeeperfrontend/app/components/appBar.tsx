@@ -198,10 +198,9 @@ function ResponsiveAppBar() {
                                     onClose={handleClose}
                                 >
                                     {auth.isAuthenticated ? (
-                                        <MenuItem onClick={() => auth.signoutRedirect()}>Logout</MenuItem>
+                                        <MenuItem onClick={() => auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin })}>Logout</MenuItem>
                                     ) : (
                                         <MenuItem onClick={() => auth.signinRedirect()}>Login</MenuItem>
-
                                     )}
                                 </Menu>
                             </div>
