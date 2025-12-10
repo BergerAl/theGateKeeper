@@ -72,11 +72,25 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogInformation($"ScheduledTaskService finished process successfully");
                     
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("ScheduledTaskService is shutting down");
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Error during ScheduledTaskService: {ex.Message}");
                 }
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("ScheduledTaskService is shutting down");
+                    break;
+                }
             }
         }
     }

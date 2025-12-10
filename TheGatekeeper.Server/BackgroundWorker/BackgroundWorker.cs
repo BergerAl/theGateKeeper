@@ -114,7 +114,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 catch (TaskCanceledException ex)
                 {
                     _logger.LogWarning(ex, "HTTP request timed out or was canceled");
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -133,7 +132,15 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError(ex, "Unexpected error occurred");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("BackgroundWorker is shutting down");
+                    break;
+                }
             }
         }
 
