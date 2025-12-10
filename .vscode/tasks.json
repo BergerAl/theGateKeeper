@@ -25,6 +25,20 @@
             ],
             "problemMatcher": "$msCompile",
             "isBackground": true
+        },
+        {
+            "label": "build-release",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "--configuration",
+                "Release",
+                "${workspaceFolder}/TheGatekeeper.Server/TheGateKeeper.Server.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
