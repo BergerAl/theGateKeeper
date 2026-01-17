@@ -40,6 +40,8 @@ export const ChartComponent: React.FC = () => {
     const dispatch = useAppDispatch();
     const [chartData, setChartData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<number>(2026);
+    const [availableYears, setAvailableYears] = useState<number[]>([]);
 
     const lpToTier = (lp: any) => {
         switch (true) {
@@ -115,14 +117,27 @@ export const ChartComponent: React.FC = () => {
                     throw new Error('Failed to fetch user history');
                 }
                 const data = await response.json();
-                setChartData(
-                    data?.rankTimeLine?.map((x: any) => ({
-                        date: new Date(x.dateTime).toLocaleDateString(),
-                        leaguePoints: x.combinedPoints,
-                        rank: getTierRankLeaguePointsFromTotal(x.combinedPoints).rank,
-                        tier: getTierRankLeaguePointsFromTotal(x.combinedPoints).tier
-                    })) || []
-                );
+                const formattedData = data?.rankTimeLine?.map((x: any) => ({
+                    date: new Date(x.dateTime).toLocaleDateString(),
+                    dateTime: x.dateTime,
+                    year: new Date(x.dateTime).getFullYear(),
+                    leaguePoints: x.combinedPoints,
+                    rank: getTierRankLeaguePointsFromTotal(x.combinedPoints).rank,
+                    tier: getTierRankLeaguePointsFromTotal(x.combinedPoints).tier
+                })) || [];
+                
+                // Extract unique years and sort them
+                const years = Array.from(new Set(formattedData.map((d: any) => d.year)) as Set<number>).sort((a: number, b: number) => b - a);
+                setAvailableYears(years);
+                
+                // Set selectedYear to 2026 if available, otherwise the first available year
+                if (years.includes(2026)) {
+                    setSelectedYear(2026);
+                } else if (years.length > 0) {
+                    setSelectedYear(years[0]);
+                }
+                
+                setChartData(formattedData);
             } catch (err: any) {
                 console.error(err.message || 'Failed to fetch user history');
             } finally {
@@ -136,6 +151,9 @@ export const ChartComponent: React.FC = () => {
     };
 
     if (!visible) return null;
+
+    // Filter data based on selected year
+    const filteredChartData = chartData.filter((d: any) => d.year === selectedYear);
 
     return (
         <div
@@ -184,16 +202,38 @@ export const ChartComponent: React.FC = () => {
                 >
                     &times;
                 </button>
+                {availableYears.length > 0 && (
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <label style={{ fontWeight: 'bold', color: theme === 'light' ? '#000' : '#fff' }}>Select Year:</label>
+                        {availableYears.map((year) => (
+                            <button
+                                key={year}
+                                onPointerDown={() => setSelectedYear(year)}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    border: selectedYear === year ? '2px solid #00bcd4' : '1px solid #ccc',
+                                    background: selectedYear === year ? 'rgba(0,188,212,0.2)' : 'transparent',
+                                    cursor: 'pointer',
+                                    fontWeight: selectedYear === year ? 'bold' : 'normal',
+                                    color: theme === 'light' ? '#000' : '#fff'
+                                }}
+                            >
+                                {year}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '40px 0' }}>Loading...</div>
                 ) : (
                     <Line
                         data={{
-                            labels: chartData.map((d) => d.date),
+                            labels: filteredChartData.map((d) => d.date),
                             datasets: [
                                 {
                                     label: userName,
-                                    data: chartData.map((d) => d.leaguePoints),
+                                    data: filteredChartData.map((d) => d.leaguePoints),
                                     borderColor: '#00bcd4',
                                     backgroundColor: 'rgba(0,188,212,0.2)',
                                     tension: 0.4,
@@ -209,9 +249,8 @@ export const ChartComponent: React.FC = () => {
                                     callbacks: {
                                         label: function(context) {
                                             const index = context.dataIndex;
-                                            const rank = context.chart.data.datasets[0].data[index];
                                             // Find the corresponding chartData entry
-                                            const chartDataEntry = chartData[index];
+                                            const chartDataEntry = filteredChartData[index];
                                             return `${lpToTier(chartDataEntry?.leaguePoints) || ''} (${chartDataEntry?.leaguePoints%100} LP)`;
                                         }
                                     }
@@ -271,8 +310,8 @@ export const ChartComponent: React.FC = () => {
                                             return lpToTier(value)
                                         },
                                     },
-                                    max: Math.max(...chartData.map((d) => d.leaguePoints))*1.05,
-                                    min: Math.min(...chartData.map((d) => d.leaguePoints))*0.95,
+                                    max: filteredChartData.length > 0 ? Math.max(...filteredChartData.map((d) => d.leaguePoints))*1.05 : 2800,
+                                    min: filteredChartData.length > 0 ? Math.min(...filteredChartData.map((d) => d.leaguePoints))*0.95 : 0,
                                     title: { display: true, text: 'Rank' },
                                     grid: { drawOnChartArea: true },
                                 },
