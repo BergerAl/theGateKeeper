@@ -12,6 +12,7 @@ import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
 import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess, fetchGateKeeperInfo } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
+import { PWAInstallPrompt } from "./components/installPrompt";
 
 function App() {
   const dispatch = useAppDispatch()
@@ -47,6 +48,15 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err =>
+        console.error('Service Worker registration failed:', err)
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (window.innerWidth <= 768) {
       dispatch(setIsMobileDevice(true))
     }
@@ -72,6 +82,7 @@ function App() {
           <ThemeProvider theme={theme === 'light' ? lightTheme :
             theme === 'dark' ? darkTheme :
               vibrantTheme}>
+            <PWAInstallPrompt />
             <SimpleSnackbar />
             {adminAccess() && <AdminControl />}
             <TheGateKeeper />

@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "The GateKeeper",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -22,6 +23,9 @@ export default function RootLayout({
 }>) {
   return (
     <>
+      <link rel="manifest" href="/manifest.json" />
+      <link rel="apple-touch-icon" href="/images/clown.png" />
+      <meta name="theme-color" content="#1976d2" />
       {children}
     </>
   );
