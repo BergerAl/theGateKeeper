@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { themeStyle } from '../../context/themes';
+import { loadThemeFromStorage, saveThemeToStorage } from '../themeStorage';
 
 export enum NavigationTab {
   LeagueStandings = "LeagueStandings",
@@ -13,7 +14,7 @@ export interface UserSlice {
 }
 
 const initialState: UserSlice = {
-  selectedTheme: 'dark',
+  selectedTheme: (loadThemeFromStorage() || 'dark') as themeStyle,
   currentNavigation: NavigationTab.LeagueStandings
 };
 
@@ -23,6 +24,7 @@ export const userSlice = createSlice({
   reducers: {
     setThemeMode: (state, action: PayloadAction<themeStyle>) => {
       state.selectedTheme = action.payload;
+      saveThemeToStorage(action.payload);
     },
     setUserNavigation: (state, action: PayloadAction<NavigationTab>) => {
       state.currentNavigation = action.payload;
