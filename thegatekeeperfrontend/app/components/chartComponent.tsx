@@ -37,6 +37,7 @@ export const ChartComponent: React.FC = () => {
     const theme = useAppSelector(state => state.userSlice.selectedTheme);
     const visible = useAppSelector(state => state.viewStateSlice.chartView.visible);
     const userName = useAppSelector(state => state.viewStateSlice.chartView.userName);
+    const isMobile = useAppSelector(state => state.viewStateSlice.isDeviceMobile)
     const dispatch = useAppDispatch();
     const [chartData, setChartData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -180,7 +181,7 @@ export const ChartComponent: React.FC = () => {
                     borderRadius: '12px',
                     boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
                     padding: '32px 24px 24px 24px',
-                    minWidth: '650px',
+                    minWidth: isMobile ? '90%' : '650px',
                     position: 'relative',
                     maxWidth: '90vw',
                     maxHeight: '90vh',
