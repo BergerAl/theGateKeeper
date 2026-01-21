@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Button, Box, Card, useTheme } from '@mui/material';
 import { useAppSelector } from '@/store/hooks';
 
+const PROMPT_STORAGE_KEY = 'gatekeeper-install-prompt-dismissed';
+const PROMPT_RESHOW_DAYS = 7;
+
 export const PWAInstallPrompt: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -9,6 +12,19 @@ export const PWAInstallPrompt: React.FC = () => {
   const themeMode = useAppSelector(state => state.userSlice.selectedTheme);
 
   useEffect(() => {
+    // Check on mount if prompt should be shown based on dismissal time
+    const dismissedTime = localStorage.getItem(PROMPT_STORAGE_KEY);
+    if (dismissedTime) {
+      const dismissedDate = new Date(dismissedTime).getTime();
+      const now = new Date().getTime();
+      const daysPassed = (now - dismissedDate) / (1000 * 60 * 60 * 24);
+      
+      if (daysPassed < PROMPT_RESHOW_DAYS) {
+        setShowPrompt(false);
+        return;
+      }
+    }
+
     const handler = (e: Event) => {
       e.preventDefault();
       console.log('beforeinstallprompt event fired');
@@ -27,11 +43,15 @@ export const PWAInstallPrompt: React.FC = () => {
       await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       setShowPrompt(false);
+      // Clear the dismissal timestamp on successful install
+      localStorage.removeItem(PROMPT_STORAGE_KEY);
     }
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    // Store the current timestamp when user clicks "Not now"
+    localStorage.setItem(PROMPT_STORAGE_KEY, new Date().toISOString());
   };
 
   if (!showPrompt) return null;
