@@ -2,7 +2,6 @@
 using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
-using TheGateKeeper.Controllers;
 using TheGateKeeper.Server.RiotsApiService;
 
 namespace TheGateKeeper.Server.BackgroundWorker

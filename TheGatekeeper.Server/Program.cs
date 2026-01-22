@@ -12,6 +12,7 @@ using TheGateKeeper.Server.ConnectionManager;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
+using TheGateKeeper.Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,11 +75,11 @@ builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
 builder.Services.AddSignalR();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-     {
-         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-     });
+// Configure JSON options for minimal APIs
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -94,6 +95,7 @@ if (app.Environment.IsDevelopment())
 #if DEBUG
 app.UseCors("_myAllowSpecificOrigins");
 # endif
+
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     Predicate = _ => true,
@@ -103,6 +105,8 @@ app.UseRouting();
 app.MapHub<EventHub>("/backendUpdate");
 app.UseAuthorization();
 
-app.MapControllers();
+// Map endpoints instead of controllers
+app.MapRiotApiEndpoints();
+app.MapAppConfigurationEndpoints();
 
 app.Run();
