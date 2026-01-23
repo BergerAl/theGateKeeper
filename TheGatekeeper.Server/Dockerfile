@@ -34,7 +34,7 @@ RUN dotnet tool install -g dotnet-typegen
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN dotnet build "TheGatekeeper.Contracts/TheGatekeeper.Contracts.csproj" -c $BUILD_CONFIGURATION
 RUN dotnet-typegen generate -p "TheGatekeeper.Contracts"
-RUN dotnet build "TheGatekeeper.sln" -c $BUILD_CONFIGURATION
+RUN dotnet build "TheGateKeeper.Server/TheGateKeeper.Server.csproj" -c $BUILD_CONFIGURATION
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
