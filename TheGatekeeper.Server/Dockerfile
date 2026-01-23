@@ -25,9 +25,9 @@ RUN node --version
 RUN npm --version
 
 WORKDIR /app
-COPY ["TheGatekeeper.Server/TheGateKeeper.Server.csproj", "TheGatekeeper.Server/"]
+COPY ["TheGateKeeper.Server/TheGateKeeper.Server.csproj", "TheGateKeeper.Server/"]
 COPY ["TheGatekeeper.Contracts/TheGatekeeper.Contracts.csproj", "TheGatekeeper.Contracts/"]
-RUN dotnet restore "TheGatekeeper.Server/TheGateKeeper.Server.csproj"
+RUN dotnet restore "TheGateKeeper.Server/TheGateKeeper.Server.csproj"
 COPY . .
 WORKDIR "/app/."
 RUN dotnet tool install -g dotnet-typegen
