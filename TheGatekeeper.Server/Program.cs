@@ -51,7 +51,7 @@ builder.Services.AddCors(options =>
                    .AllowCredentials();
         });
 });
-# endif
+#endif
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var connectionString = SecretsHelper.GetSecret(builder.Configuration, "mongoDbConnectionString");
@@ -94,7 +94,7 @@ if (app.Environment.IsDevelopment())
 }
 #if DEBUG
 app.UseCors("_myAllowSpecificOrigins");
-# endif
+#endif
 
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
