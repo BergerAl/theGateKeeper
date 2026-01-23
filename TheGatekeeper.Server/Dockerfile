@@ -25,7 +25,7 @@ RUN node --version
 RUN npm --version
 
 WORKDIR /app
-COPY ["TheGateKeeper.Server/TheGateKeeper.Server.csproj", "TheGateKeeper.Server/"]
+COPY ["TheGatekeeper.Server/TheGateKeeper.Server.csproj", "TheGateKeeper.Server/"]
 COPY ["TheGatekeeper.Contracts/TheGatekeeper.Contracts.csproj", "TheGatekeeper.Contracts/"]
 RUN dotnet restore "TheGateKeeper.Server/TheGateKeeper.Server.csproj"
 COPY . .
