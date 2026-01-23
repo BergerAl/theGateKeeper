@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using TheGateKeeper.Server;
 using TheGateKeeper.Server.AppControl;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.Endpoints
 {

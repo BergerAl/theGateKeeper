@@ -10,7 +10,7 @@ import SwipeableDrawer from '@mui/material/SwipeableDrawer';
 import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { AppConfigurationDtoV1, DisplayedView } from '@/store/features/baseComponentsSlice';
+import { AppConfigurationDtoV1, DisplayedView } from '../../types';
 import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
 
 interface SelectOption {

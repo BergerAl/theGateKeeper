@@ -1,43 +1,45 @@
-﻿namespace TheGateKeeper.Server
+﻿using TheGatekeeper.Contracts;
+
+namespace TheGateKeeper.Server
 {
     public static class CurrentPlayerList
     {
-        public static IEnumerable<RiotUser> ConstUserList()
+        public static IEnumerable<RiotUserDtoV1> ConstUserList()
         {
             return [
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Knechter",
                     Tag = "EUW"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "xVanitySixx",
                     Tag = "EUW"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Major Hefeweizen",
                     Tag = "xdd"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Tabatschko",
                     Tag = "EUW"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Oizo",
                     Tag = "Luxi"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "LuXi",
                     Tag = "Oizo"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Blinded Manu",
                     Tag = "3532"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "Hobbobbelmobmob",
                     Tag = "EUW"
                 },
-                new RiotUser() {
+                new RiotUserDtoV1() {
                     Name = "DönerBoxSchmaus",
                     Tag = "EUW"
                 }

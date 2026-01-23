@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.IdGenerators;
 using System.Text.Json.Serialization;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server
 {
@@ -29,19 +30,13 @@ namespace TheGateKeeper.Server
         public DateTime voteBlockedUntil { get; set; }
     }
 
-    public class VotingDtoV1
-    {
-        public bool isBlocked { get; set; }
-        public DateTime voteBlockedUntil { get; set; }
-    }
-
     [BsonIgnoreExtraElements]
     public class StoredStandingsDaoV1
     {
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         [BsonRepresentation(BsonType.String)]
         public string Id { get; set; }
-        public List<Standings> Standings { get; set; }
+        public List<StandingsDtoV1> Standings { get; set; }
     }
 
     [BsonIgnoreExtraElements]
@@ -56,25 +51,6 @@ namespace TheGateKeeper.Server
         public bool DisplayResultsBar { get; set; }
     }
 
-    public class AppConfigurationDtoV1
-    {
-        [JsonPropertyName("displayedView")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public DisplayedView DisplayedView { get; set; }
-
-        [JsonPropertyName("votingDisabled")]
-        public bool VotingDisabled { get; set; }
-
-        [JsonPropertyName("displayResultsBar")]
-        public bool DisplayResultsBar { get; set; }
-    }
-
-    public enum DisplayedView
-    {
-        DefaultPage,
-        ResultsPage
-    }
-
     [BsonIgnoreExtraElements]
     public class GateKeeperInformationDaoV1
     {
@@ -84,13 +60,6 @@ namespace TheGateKeeper.Server
         public string Name { get; set; } = "";
         public float GameId { get; set; } = 0;
 
-    }
-
-    [BsonIgnoreExtraElements]
-    public class GateKeeperInformationDtoV1
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = "";
     }
 
     [BsonIgnoreExtraElements]

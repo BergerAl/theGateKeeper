@@ -1,5 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchAllUsers, fetchConfiguration, fetchCurrentVoteStandings, fetchGateKeeperInfo, healthCheck, updateConfiguration, voteForUser } from '../backEndCalls';
+import { 
+    FrontEndInfoDtoV1, 
+    VoteStandingsDtoV1, 
+    GateKeeperAppInfoDtoV1,
+    AppConfigurationDtoV1,
+    DisplayedView,
+    GateKeeperInformationDtoV1
+} from '../../types';
 
 export enum SnackBarStatus {
     Ok,
@@ -7,47 +15,9 @@ export enum SnackBarStatus {
     Error
 }
 
-export enum DisplayedView {
-    DefaultPage = "DefaultPage",
-    ResultsPage = "ResultsPage"
-}
-
 export interface SnackBarState {
     text: string,
     status?: SnackBarStatus
-}
-
-export interface Voting {
-    isBlocked: boolean
-    voteBlockedUntil: Date
-}
-
-export interface GateKeeperAppInfo {
-    usersOnline: number
-}
-
-export interface VoteStandings {
-    playerName: string
-    votes: number
-}
-
-export interface GateKeeperInfo {
-    name: string
-}
-
-export interface FrontEndInfo {
-    name: string
-    tier: string
-    rank: string
-    leaguePoints: number
-    playedGames: number
-    voting: Voting
-}
-
-export interface AppConfigurationDtoV1 {
-    displayedView: DisplayedView
-    votingDisabled: boolean
-    displayResultsBar: boolean
 }
 
 export interface ViewState {
@@ -57,12 +27,12 @@ export interface ViewState {
         userName: string
         visible: boolean
     },
-    frontEndInfo: FrontEndInfo[]
-    voteStandings: VoteStandings[]
+    frontEndInfo: FrontEndInfoDtoV1[]
+    voteStandings: VoteStandingsDtoV1[]
     appConfiguration: AppConfigurationDtoV1
-    gateKeeperInfo: GateKeeperInfo
+    gateKeeperInfo: GateKeeperInformationDtoV1
     isDeviceMobile: boolean
-    appInfo: GateKeeperAppInfo
+    appInfo: GateKeeperAppInfoDtoV1
 }
 
 export const initialState: ViewState = {
@@ -88,7 +58,7 @@ export const viewStateSlice = createSlice({
         setSnackBarState: (state, action: PayloadAction<SnackBarState>) => {
             state.snackBarState = action.payload;
         },
-        updateUsersIfBlocked: (state, action: PayloadAction<FrontEndInfo[]>) => {
+        updateUsersIfBlocked: (state, action: PayloadAction<FrontEndInfoDtoV1[]>) => {
             action.payload.forEach(element => {
                 var playerIndex = state.frontEndInfo.findIndex(x => x.name == element.name)
                 if (playerIndex !== -1) {
@@ -102,7 +72,7 @@ export const viewStateSlice = createSlice({
         setIsMobileDevice: (state, action: PayloadAction<boolean>) => {
             state.isDeviceMobile = action.payload
         },
-        setUsersOnline: (state, action: PayloadAction<GateKeeperAppInfo>) => {
+        setUsersOnline: (state, action: PayloadAction<GateKeeperAppInfoDtoV1>) => {
             state.appInfo = action.payload
         },
         closeChartView: (state) => {

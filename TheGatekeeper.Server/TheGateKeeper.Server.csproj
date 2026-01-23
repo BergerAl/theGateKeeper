@@ -32,6 +32,14 @@
     <Folder Include="CommonServices\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TheGatekeeper.Contracts\TheGatekeeper.Contracts.csproj" />
+  </ItemGroup>
+
+  <Target Name="GenerateTypeScript" AfterTargets="Build">
+    <Exec Command="dotnet-typegen generate" WorkingDirectory="..\TheGatekeeper.Contracts" />
+  </Target>
+
   <Target Name="NpmInstall" Inputs="../thegatekeeperfrontend/package.json" Outputs="../thegatekeeperfrontend/node_modules/.install-stamp" Condition="'$(Configuration)' == 'Release'">
     <Exec WorkingDirectory="$(FrontEndRoot)" Command="npm ci" Condition="'$(RestorePackagesWithLockFile)' == 'true'" />
 	<Exec WorkingDirectory="$(FrontEndRoot)" Command="npm install" Condition="'$(RestorePackagesWithLockFile)' != 'true'" />

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.Endpoints
 {
@@ -17,7 +18,7 @@ namespace TheGateKeeper.Server.Endpoints
                 return Results.Ok(ranks);
             })
             .WithName("GetCurrentRanks")
-            .Produces<IEnumerable<FrontEndInfo>>();
+            .Produces<IEnumerable<FrontEndInfoDtoV1>>();
 
             group.MapGet("getCurrentVoteStandings", async (IVotingService votingService) =>
             {

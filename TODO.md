@@ -1,7 +1,9 @@
 # TODO
 
 * [ ] Heath check service
-* [ ] store configs in browser
+* [x] store configs in browser
 * [ ] Make routes save with claims
-* [ ] Create a put API to provide a new API key
-* [ ] MongoDb hosting on oizos system
+* [x] Display year 2025 and 2026 as seasons in chart. History tab?
+* [x] PWA link on phone
+* [x] Restructure backend
+* [x] Endpoints

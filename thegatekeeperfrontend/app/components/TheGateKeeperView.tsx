@@ -11,12 +11,13 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { voteForUser } from '@/store/backEndCalls';
-import { DisplayedView, setUserNameSelection } from '@/store/features/baseComponentsSlice';
+import { setUserNameSelection } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
 import { NavigationTab } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
+import { DisplayedView } from '../../types';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)

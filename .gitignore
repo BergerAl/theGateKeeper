@@ -27,8 +27,8 @@ yarn-error.log*
 .dockerignore
 
 TheGateKeeper.Server/wwwroot/
-TheGateKeeper.Server/bin/**/*
-TheGateKeeper.Server/obj/**/*
+**/bin/**/*
+**/obj/**/*
 *.user
 api_key
 secrets/**
@@ -48,6 +48,7 @@ secrets/**
 thegatekeeperfrontend/.next/**/*
 thegatekeeperfrontend/node_modules/**/*
 thegatekeeperfrontend/out/**/*
+thegatekeeperfrontend/types/**
 /out/
 
 # production

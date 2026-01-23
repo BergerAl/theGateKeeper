@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { AppConfigurationDtoV1, FrontEndInfo, GateKeeperAppInfo, setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
+import { setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
@@ -13,6 +13,7 @@ import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminA
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
 import { PWAInstallPrompt } from "./components/installPrompt";
+import { FrontEndInfoDtoV1, GateKeeperAppInfoDtoV1, AppConfigurationDtoV1 } from "@/types";
 
 function App() {
   const dispatch = useAppDispatch()
@@ -25,13 +26,13 @@ function App() {
       .withUrl(`${domainUrlPrefix()}/backendUpdate`)
       .build();
 
-    newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfo[]) => {
+    newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfoDtoV1[]) => {
       dispatch(updateUsersIfBlocked(frontEndInfo))
     });
     newConnection.on("UpdateConfigurationView", (appConfiguration: AppConfigurationDtoV1) => {
       dispatch(updateAppConfig(appConfiguration))
     });
-    newConnection.on("UsersOnline", (usersOnline: GateKeeperAppInfo) => {
+    newConnection.on("UsersOnline", (usersOnline: GateKeeperAppInfoDtoV1) => {
       dispatch(setUsersOnline(usersOnline))
     });
 
