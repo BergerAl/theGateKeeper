@@ -26,15 +26,18 @@ RUN npm --version
 
 WORKDIR /app
 COPY ["TheGatekeeper.Server/TheGateKeeper.Server.csproj", "TheGatekeeper.Server/"]
+COPY ["TheGatekeeper.Contracts/TheGatekeeper.Contracts.csproj", "TheGatekeeper.Contracts/"]
 RUN dotnet restore "TheGatekeeper.Server/TheGateKeeper.Server.csproj"
 COPY . .
 WORKDIR "/app/."
-RUN dotnet build "TheGatekeeper.Server/TheGateKeeper.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet tool install -g dotnet-typegen
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet build "TheGatekeeper.sln" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "TheGatekeeper.Server/TheGateKeeper.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "TheGatekeeper.sln" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
