@@ -31,7 +31,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     {
                         try
                         {
-                            await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo(_mapper));
+                            await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo(_mapper, _logger));
                         }
                         catch (Exception ex)
                         {

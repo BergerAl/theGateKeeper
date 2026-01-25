@@ -74,6 +74,7 @@ builder.Services.Configure<HostOptions>(hostOptions =>
 builder.Services.AddHostedService<StartUpService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
+builder.Services.AddHostedService<MatchWatcherService>();
 builder.Services.AddSignalR();
 // Configure JSON options for minimal APIs
 builder.Services.ConfigureHttpJsonOptions(options =>

@@ -105,7 +105,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         }
                     }
                     await NotifyDiscordGateKeeperPlaying(stoppingToken);
-                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
+                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper, _logger).ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList(), stoppingToken).ConfigureAwait(false);
 
                     _logger.LogInformation($"BackgroundWorker finished process successfully");

@@ -20,6 +20,7 @@ namespace TheGateKeeper.Server
 
         public VotingDaoV1 Voting { get; set; }
         public List<LeagueEntryDtoV1> LeagueEntries { get; set; }
+        public StoredMatchDaoV1 StoredLastMatch { get; set; }
     }
 
     [BsonIgnoreExtraElements]
@@ -79,5 +80,37 @@ namespace TheGateKeeper.Server
     {
         public DateTime DateTime { get; set; }
         public int CombinedPoints { get; set; } = 0;
+    }
+
+    [BsonIgnoreExtraElements]
+    public class StoredMatchDaoV1
+    {
+        [JsonPropertyName("matchId")]
+        public string MatchId { get; set; } = "";
+        public string PlayerPuuid { get; set; } = "";
+        public DateTime StoredAt { get; set; }
+        public long GameCreation { get; set; }
+        public int GameDuration { get; set; }
+        public string GameMode { get; set; } = "";
+        public string GameType { get; set; } = "";
+        public int MapId { get; set; }
+        public int QueueId { get; set; }
+        public int ChampionId { get; set; }
+        public string ChampionName { get; set; } = "";
+        public int Kills { get; set; }
+        public int Deaths { get; set; }
+        public int Assists { get; set; }
+        public bool Win { get; set; }
+        public int GoldEarned { get; set; }
+        public int TotalDamageDealtToChampions { get; set; }
+        public int TotalDamageTaken { get; set; }
+        public int ChampLevel { get; set; }
+        public int Item0 { get; set; }
+        public int Item1 { get; set; }
+        public int Item2 { get; set; }
+        public int Item3 { get; set; }
+        public int Item4 { get; set; }
+        public int Item5 { get; set; }
+        public int Item6 { get; set; }
     }
 }

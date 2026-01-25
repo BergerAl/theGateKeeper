@@ -31,7 +31,7 @@ namespace TheGateKeeper.Server.RiotsApiService
             try
             {
                 var players = await _collection.Find(_ => true).ToListAsync();
-                return players.PlayerToFrontEndInfo(_mapper).SortUsers();
+                return players.PlayerToFrontEndInfo(_mapper, _logger).SortUsers();
             }
             catch (Exception e)
             {
