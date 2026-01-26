@@ -43,10 +43,10 @@ namespace TheGateKeeper.Server
                     Name = "DönerBoxSchmaus",
                     Tag = "EUW"
                 },
-                // new RiotUserDtoV1() {
-                //     Name = "Disco Pablobar",
-                //     Tag = "CW12"
-                // },
+                new RiotUserDtoV1() {
+                    Name = "Disco Pablobar",
+                    Tag = "CW12"
+                },
                 new RiotUserDtoV1() {
                     Name = "IGazY",
                     Tag = "EUW"

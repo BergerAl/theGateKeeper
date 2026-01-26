@@ -47,10 +47,20 @@ namespace TheGateKeeper.Server
                 var responseList = new List<FrontEndInfoDtoV1>();
                 foreach (var player in players)
                 {
-                    var element = player.LeagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5")?.First();
+                    var element = player.LeagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5")?.FirstOrDefault();
                     if (element == null)
                     {
-                        logger.LogWarning($"No RANKED_SOLO_5x5 entry found for player {player.UserName}");
+                        logger.LogInformation($"No RANKED_SOLO_5x5 entry found for player {player.UserName}");
+                        var defaultFrontEndInfo = new FrontEndInfoDtoV1()
+                        {
+                            leaguePoints = 0,
+                            name = player.UserName,
+                            rank = "Loves his wood",
+                            tier = "UNRANKED",
+                            playedGames = 0,
+                            voting = mapper.Map<VotingDtoV1>(player.Voting)
+                        };
+                        responseList.Add(defaultFrontEndInfo);
                         continue;
                     }
                     var frontEndInfo = new FrontEndInfoDtoV1()
