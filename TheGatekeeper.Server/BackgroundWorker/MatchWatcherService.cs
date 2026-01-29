@@ -168,12 +168,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var update = Builders<PlayerDaoV1>.Update.Set(p => p.StoredLastMatch, storedMatch);
                 await _playersCollection.UpdateOneAsync(filter, update, cancellationToken: stoppingToken);
                 
-                // Check KDA and send Discord notification if <= 1
+                // Calculate KDA and send Discord notification if notable (<=1 or >=10)
                 var kda = participant.Deaths == 0 ? participant.Kills + participant.Assists : (double)(participant.Kills + participant.Assists) / participant.Deaths;
-                if (kda <= 1)
-                {
-                    await SendDiscordNotificationAsync(player.UserName, participant, matchData.Info.GameMode, kda, stoppingToken);
-                }
+                await SendDiscordNotificationAsync(player.UserName, participant, matchData.Info.GameMode, kda, stoppingToken);
                 
                 _logger.LogInformation($"Successfully stored match {matchId} for player {player.UserName} - {participant.ChampionName} ({participant.Kills}/{participant.Deaths}/{participant.Assists}) {(participant.Win ? "WIN" : "LOSS")})");
             }
@@ -190,6 +187,12 @@ namespace TheGateKeeper.Server.BackgroundWorker
 #endif
             try
             {
+                // Only send notification for exceptional performance (high or low)
+                if (kda > 1 && kda < 10)
+                {
+                    return; // Normal performance, no notification needed
+                }
+
                 var webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
                 webhookUrl = webhookUrl.Trim();
 
@@ -199,21 +202,32 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     return;
                 }
 
-                var message = new
-                {
-                    content = $"🔻 **{playerName}** had a rough game!\n" +
-                              $"**Game Mode:** {gameMode}\n" +
-                              $"**Champion:** {participant.ChampionName}\n" +
-                              $"**KDA:** {participant.Kills}/{participant.Deaths}/{participant.Assists} (KDA: {kda:F2})\n" +
-                              $"**Result:** {(participant.Win ? "WIN ✅" : "LOSS ❌")}" +
-                              $"What a fucking terrorist!"
-                };
+                var isPraise = kda >= 10;
+                var message = isPraise
+                    ? new
+                    {
+                        content = $"🌟 **{playerName}** absolutely dominated the game!\n" +
+                                  $"**Game Mode:** {gameMode}\n" +
+                                  $"**Champion:** {participant.ChampionName}\n" +
+                                  $"**KDA:** {participant.Kills}/{participant.Deaths}/{participant.Assists} (KDA: {kda:F2})\n" +
+                                  $"**Result:** {(participant.Win ? "WIN ✅" : "LOSS ❌")}\n" +
+                                  $"What an absolute legend! 🔥"
+                    }
+                    : new
+                    {
+                        content = $"🔻 **{playerName}** had a rough game!\n" +
+                                  $"**Game Mode:** {gameMode}\n" +
+                                  $"**Champion:** {participant.ChampionName}\n" +
+                                  $"**KDA:** {participant.Kills}/{participant.Deaths}/{participant.Assists} (KDA: {kda:F2})\n" +
+                                  $"**Result:** {(participant.Win ? "WIN ✅" : "LOSS ❌")}\n" +
+                                  $"What a fucking terrorist!"
+                    };
 
                 var response = await _httpClient.PostAsJsonAsync(webhookUrl, message, stoppingToken);
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation($"Discord notification sent for {playerName}");
+                    _logger.LogInformation($"Discord notification sent for {playerName} ({(isPraise ? "praise" : "criticism")})");
                 }
                 else
                 {
