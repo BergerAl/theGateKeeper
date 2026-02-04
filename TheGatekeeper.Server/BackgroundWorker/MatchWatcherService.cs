@@ -123,6 +123,13 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     return;
                 }
 
+                // Skip games shorter than 5 minutes (300 seconds)
+                if (matchData.Info.GameDuration < 300)
+                {
+                    _logger.LogInformation($"Match {matchId} duration ({matchData.Info.GameDuration}s) is below 5 minutes, skipping");
+                    return;
+                }
+
                 // Find the participant matching the player's puuid
                 var participant = matchData.Info.Participants.FirstOrDefault(p => p.Puuid == player.Account.puuid);
 
