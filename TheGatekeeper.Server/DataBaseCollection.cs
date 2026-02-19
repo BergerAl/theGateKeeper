@@ -21,6 +21,7 @@ namespace TheGateKeeper.Server
         public VotingDaoV1 Voting { get; set; }
         public List<LeagueEntryDtoV1> LeagueEntries { get; set; }
         public StoredMatchDaoV1 StoredLastMatch { get; set; }
+        public Dictionary<string, int> ItemPurchaseCounts { get; set; } = [];
     }
 
     [BsonIgnoreExtraElements]
@@ -112,5 +113,13 @@ namespace TheGateKeeper.Server
         public int Item4 { get; set; }
         public int Item5 { get; set; }
         public int Item6 { get; set; }
+    }
+
+    [BsonIgnoreExtraElements]
+    public class ItemDaoV1
+    {
+        [BsonId]
+        public int ItemId { get; set; }
+        public string Name { get; set; } = "";
     }
 }
