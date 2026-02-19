@@ -195,7 +195,12 @@ namespace TheGateKeeper.Server.BackgroundWorker
             try
             {
                 // Only send notification for exceptional performance (high or low)
-                if (kda > 1 && kda < 10)
+                // ARAM has different thresholds since KDA tends to be higher
+                var isNormalPerformance = gameMode == "ARAM"
+                    ? kda > 2 && kda < 10
+                    : kda > 1 && kda < 10;
+
+                if (isNormalPerformance)
                 {
                     return; // Normal performance, no notification needed
                 }
