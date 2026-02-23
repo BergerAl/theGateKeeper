@@ -10,6 +10,8 @@ namespace TheGateKeeper.Server.BackgroundWorker
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
+        private readonly IMongoCollection<ItemDaoV1> _itemsCollection = client.GetDatabase("gateKeeper")
+                           .GetCollection<ItemDaoV1>("items");
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
         private readonly ILogger<MatchWatcherService> _logger = logger;
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
@@ -19,8 +21,12 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string _matchIdsByPuuidUrl = "https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/";
         private readonly string _matchDetailsUrl = "https://europe.api.riotgames.com/lol/match/v5/matches/";
 
+        private static readonly HashSet<int> TrackedItemIds = [3084, 6676, 6653];
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await ValidateTrackedItemsExist();
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -170,10 +176,20 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     Item6 = participant.Item6
                 };
 
-                // Update the player document with the new match
+                // Track purchases of monitored items
+                var playerItems = new[] { participant.Item0, participant.Item1, participant.Item2, participant.Item3, participant.Item4, participant.Item5, participant.Item6 };
+                var purchasedTrackedItems = playerItems.Where(TrackedItemIds.Contains).ToList();
+
+                // Update the player document with the new match + item purchase counts
                 var filter = Builders<PlayerDaoV1>.Filter.Eq(p => p.Id, player.Id);
-                var update = Builders<PlayerDaoV1>.Update.Set(p => p.StoredLastMatch, storedMatch);
-                await _playersCollection.UpdateOneAsync(filter, update, cancellationToken: stoppingToken);
+                var updateDef = Builders<PlayerDaoV1>.Update.Set(p => p.StoredLastMatch, storedMatch);
+
+                foreach (var itemId in purchasedTrackedItems)
+                {
+                    updateDef = updateDef.Inc(p => p.ItemPurchaseCounts[itemId.ToString()], 1);
+                }
+
+                await _playersCollection.UpdateOneAsync(filter, updateDef, cancellationToken: stoppingToken);
                 
                 // Calculate KDA and send Discord notification if notable (<=1 or >=10)
                 var kda = participant.Deaths == 0 ? participant.Kills + participant.Assists : (double)(participant.Kills + participant.Assists) / participant.Deaths;
@@ -194,6 +210,30 @@ namespace TheGateKeeper.Server.BackgroundWorker
 #endif
             try
             {
+                var webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
+                webhookUrl = webhookUrl.Trim();
+
+                if (string.IsNullOrEmpty(webhookUrl))
+                {
+                    _logger.LogWarning("Discord webhook URL not configured");
+                    return;
+                }
+
+                // Send a shame message if the player is playing Swiftplay
+                if (gameMode == "SWIFTPLAY")
+                {
+                    var swiftplayMessage = new
+                    {
+                        content = $"🤡 **{playerName}** is playing Swiftplay!\n" +
+                                  $"**Champion:** {participant.ChampionName}\n" +
+                                  $"**Result:** {(participant.Win ? "WIN ✅" : "LOSS ❌")}\n" +
+                                  $"Why are you playing Swiftplay, you dirty cheater?! Go play ranked!"
+                    };
+
+                    await _httpClient.PostAsJsonAsync(webhookUrl, swiftplayMessage, stoppingToken);
+                    _logger.LogInformation($"Discord Swiftplay shame notification sent for {playerName}");
+                }
+
                 // Only send notification for exceptional performance (high or low)
                 // ARAM has different thresholds since KDA tends to be higher
                 var isNormalPerformance = gameMode == "ARAM"
@@ -204,9 +244,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     return; // Normal performance, no notification needed
                 }
-
-                var webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
-                webhookUrl = webhookUrl.Trim();
 
                 if (string.IsNullOrEmpty(webhookUrl))
                 {
@@ -249,6 +286,21 @@ namespace TheGateKeeper.Server.BackgroundWorker
             catch (Exception ex)
             {
                 _logger.LogError($"Error sending Discord notification: {ex.Message}");
+            }
+        }
+
+        private async Task ValidateTrackedItemsExist()
+        {
+            var filter = Builders<ItemDaoV1>.Filter.In(i => i.ItemId, TrackedItemIds);
+            var existingItems = await _itemsCollection.Find(filter).ToListAsync();
+            var existingIds = existingItems.Select(i => i.ItemId).ToHashSet();
+
+            foreach (var itemId in TrackedItemIds)
+            {
+                if (!existingIds.Contains(itemId))
+                {
+                    _logger.LogError("Tracked item {ItemId} does not exist in the items collection", itemId);
+                }
             }
         }
     }
