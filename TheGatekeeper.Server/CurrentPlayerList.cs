@@ -44,7 +44,7 @@ namespace TheGateKeeper.Server
                     Tag = "EUW"
                 },
                 new RiotUserDtoV1() {
-                    Name = "Disco Pablobar",
+                    Name = "Samy4ki Deluxe",
                     Tag = "CW12"
                 },
                 new RiotUserDtoV1() {
