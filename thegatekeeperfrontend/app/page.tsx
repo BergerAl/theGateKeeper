@@ -17,7 +17,6 @@ import { FrontEndInfoDtoV1, GateKeeperAppInfoDtoV1, AppConfigurationDtoV1 } from
 
 function App() {
   const dispatch = useAppDispatch()
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.userSlice.selectedTheme)
 
@@ -38,23 +37,10 @@ function App() {
 
     newConnection.start().catch(err => console.error('Error starting connection:', err));
 
-    setConnection(newConnection);
-
     return () => {
-      if (connection) {
-        connection.stop();
-      }
+      newConnection.stop();
     };
     // eslint-disable-next-line
-  }, []);
-
-  useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err =>
-        console.error('Service Worker registration failed:', err)
-      );
-    }
   }, []);
 
   useEffect(() => {
