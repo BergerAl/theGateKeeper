@@ -210,6 +210,30 @@ namespace TheGateKeeper.Server.BackgroundWorker
 #endif
             try
             {
+                var webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
+                webhookUrl = webhookUrl.Trim();
+
+                if (string.IsNullOrEmpty(webhookUrl))
+                {
+                    _logger.LogWarning("Discord webhook URL not configured");
+                    return;
+                }
+
+                // Send a shame message if the player is playing Swiftplay
+                if (gameMode == "SWIFTPLAY")
+                {
+                    var swiftplayMessage = new
+                    {
+                        content = $"🤡 **{playerName}** is playing Swiftplay!\n" +
+                                  $"**Champion:** {participant.ChampionName}\n" +
+                                  $"**Result:** {(participant.Win ? "WIN ✅" : "LOSS ❌")}\n" +
+                                  $"Why are you playing Swiftplay, you dirty cheater?! Go play ranked!"
+                    };
+
+                    await _httpClient.PostAsJsonAsync(webhookUrl, swiftplayMessage, stoppingToken);
+                    _logger.LogInformation($"Discord Swiftplay shame notification sent for {playerName}");
+                }
+
                 // Only send notification for exceptional performance (high or low)
                 // ARAM has different thresholds since KDA tends to be higher
                 var isNormalPerformance = gameMode == "ARAM"
@@ -220,9 +244,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     return; // Normal performance, no notification needed
                 }
-
-                var webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
-                webhookUrl = webhookUrl.Trim();
 
                 if (string.IsNullOrEmpty(webhookUrl))
                 {
