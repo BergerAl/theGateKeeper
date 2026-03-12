@@ -74,10 +74,10 @@ builder.Services.Configure<HostOptions>(hostOptions =>
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
 builder.Services.AddHostedService<StartUpService>();
-builder.Services.AddHostedService<ItemSeedService>();
-builder.Services.AddHostedService<BackgroundWorker>();
-builder.Services.AddHostedService<ScheduledTaskService>();
-builder.Services.AddHostedService<MatchWatcherService>();
+// builder.Services.AddHostedService<ItemSeedService>();
+// builder.Services.AddHostedService<BackgroundWorker>();
+// builder.Services.AddHostedService<ScheduledTaskService>();
+// builder.Services.AddHostedService<MatchWatcherService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);

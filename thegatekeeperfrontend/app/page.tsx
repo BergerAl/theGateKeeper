@@ -23,7 +23,7 @@ function App() {
   const oidcConfig = {
     authority: "http://localhost:8892/realms/thegatekeeper",
     client_id: "gateKeeperAppfrontEndClient",
-    redirect_uri: "http://localhost:3000/",
+    redirect_uri: "http://localhost:8891/", //3000
     response_type: "code",
     automaticSilentRenew: true,
     loadUserInfo: true,

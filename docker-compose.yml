@@ -50,6 +50,41 @@ services:
     networks:
       - my-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      #KEYCLOAK_ADMIN_FILE: /run/secrets/keycloak_admin
+      #KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+    ports:
+      - "8892:8080"
+    command: start-dev
+    networks:
+      - my-network
+    depends_on:
+      - keycloak-db
+    secrets:
+      - keycloak_admin
+      - keycloak_admin_password
+
+  keycloak-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+      - ./backups/keycloak_dump_utf8.sql:/docker-entrypoint-initdb.d/keycloak_dump_utf8.sql:ro
+    networks:
+      - my-network
+
 secrets:
   api_key:
     file: ./secrets/api_key
@@ -61,6 +96,10 @@ secrets:
     file: ./secrets/mongoDbPassword
   discordWebhook:
     file: ./secrets/discordWebhook
+  keycloak_admin:
+    file: ./secrets/keycloak_admin
+  keycloak_admin_password:
+    file: ./secrets/keycloak_admin_password
 
 networks:
   my-network:
@@ -68,3 +107,4 @@ networks:
 
 volumes:
   mongo-data:
+  keycloak-db-data:

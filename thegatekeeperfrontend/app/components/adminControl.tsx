@@ -31,17 +31,25 @@ const AdminControl = () => {
     const auth = useAuth();
 
     // Check for Admin role in access token
-    const hasAdminRole = (Array.isArray(auth.user?.profile?.roles) && auth.user.profile.roles.includes('Admin')) ||
-        (auth.user?.access_token && (() => {
+    // Option A: uses a custom realm role named 'Admin' assigned to the user in Keycloak
+    // Option B: uses the built-in 'realm-admin' role from the realm-management client
+    const hasAdminRole = (() => {
+        if (auth.user?.access_token) {
             try {
-                const payload = JSON.parse(atob(auth.user.access_token.split('.')[1]));
-                // Check both realm_access and resource_access
-                return (Array.isArray(payload.realm_access?.roles) && payload.realm_access.roles.includes('Admin')) ||
-                    Object.values(payload.resource_access || {}).some((r: any) => Array.isArray(r.roles) && r.roles.includes('Admin'));
+                const base64url = auth.user.access_token.split('.')[1]
+                    .replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(base64url));
+
+                if (Array.isArray(payload.realm_access?.roles) && payload.realm_access.roles.includes('Admin')) return true;
+
+                const realmMgmt = payload.resource_access?.['realm-management'];
+                if (Array.isArray(realmMgmt?.roles) && realmMgmt.roles.includes('realm-admin')) return true;
             } catch {
                 return false;
             }
-        })());
+        }
+        return false;
+    })();
 
     useEffect(() => {
         dispatch(fetchCurrentVoteStandings())
