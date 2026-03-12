@@ -1,5 +1,6 @@
 using AutoMapper;
 using TheGateKeeper.Server;
+using TheGatekeeper.Contracts;
 
 public class MappingProfile : Profile
 {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using TheGateKeeper.Server.ConnectionManager;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server
 {
@@ -11,7 +12,7 @@ namespace TheGateKeeper.Server
             _connectionManager = connectionManager;
         }
 
-        public async Task SendMessage(Task<IEnumerable<FrontEndInfo>> frontEndInfos)
+        public async Task SendMessage(Task<IEnumerable<FrontEndInfoDtoV1>> frontEndInfos)
         {
             await Clients.All.SendAsync("ReceiveFrontEndInfo", frontEndInfos);
         }

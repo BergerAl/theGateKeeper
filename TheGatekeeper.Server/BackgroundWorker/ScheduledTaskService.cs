@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
@@ -30,7 +31,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     {
                         try
                         {
-                            await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo(_mapper));
+                            await _eventHub.Clients.All.SendAsync("ReceiveFrontEndInfo", blockedPlayers.PlayerToFrontEndInfo(_mapper, _logger));
                         }
                         catch (Exception ex)
                         {
@@ -72,11 +73,25 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogInformation($"ScheduledTaskService finished process successfully");
                     
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("ScheduledTaskService is shutting down");
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Error during ScheduledTaskService: {ex.Message}");
                 }
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("ScheduledTaskService is shutting down");
+                    break;
+                }
             }
         }
     }

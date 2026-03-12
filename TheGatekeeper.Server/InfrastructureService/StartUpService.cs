@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.InfrastructureService
 {

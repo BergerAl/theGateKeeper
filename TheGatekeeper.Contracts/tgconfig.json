@@ -1,0 +1,8 @@
+{
+  "outputPath": "../thegatekeeperfrontend/types",
+  "createIndexFile": true,
+  "enumStringInitializers": true,
+  "customTypeMappings": {
+    "System.DateTime": "Date"
+  }
+}

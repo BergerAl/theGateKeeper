@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MongoDB.Driver;
 using System.Text.RegularExpressions;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.RiotsApiService
 {
@@ -25,17 +26,17 @@ namespace TheGateKeeper.Server.RiotsApiService
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<FrontEndInfo>> GetAllRanks()
+        public async Task<IEnumerable<FrontEndInfoDtoV1>> GetAllRanks()
         {
             try
             {
                 var players = await _collection.Find(_ => true).ToListAsync();
-                return players.PlayerToFrontEndInfo(_mapper).SortUsers();
+                return players.PlayerToFrontEndInfo(_mapper, _logger).SortUsers();
             }
             catch (Exception e)
             {
                 _logger.LogError($"Error during fetching of users. Exception {e}");
-                return [new FrontEndInfo()];
+                return [new FrontEndInfoDtoV1()];
             }
         }
 

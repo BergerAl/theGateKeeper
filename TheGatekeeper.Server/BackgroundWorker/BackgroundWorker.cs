@@ -2,8 +2,8 @@
 using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
-using TheGateKeeper.Controllers;
 using TheGateKeeper.Server.RiotsApiService;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
@@ -105,7 +105,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         }
                     }
                     await NotifyDiscordGateKeeperPlaying(stoppingToken);
-                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper).ConfigureAwait(false);
+                    var updatedStandings = await _playersCollection.GetAllRanksFromCollection(_mapper, _logger).ConfigureAwait(false);
                     await CompareStandings(updatedStandings.ToList().FrontEndInfoListToStandings().ToList(), stoppingToken).ConfigureAwait(false);
 
                     _logger.LogInformation($"BackgroundWorker finished process successfully");
@@ -114,7 +114,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 catch (TaskCanceledException ex)
                 {
                     _logger.LogWarning(ex, "HTTP request timed out or was canceled");
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -133,7 +132,15 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError(ex, "Unexpected error occurred");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("BackgroundWorker is shutting down");
+                    break;
+                }
             }
         }
 
@@ -179,7 +186,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
+                    var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCodeDtoV1>();
                     _logger.LogError($"Error during reading of account information: {errorResponse?.Status.message}");
                     return new AccountDtoV1();
                 }
@@ -201,7 +208,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 var response = await _httpClient.GetAsync(url, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCode>();
+                    var errorResponse = await response.Content.ReadFromJsonAsync<RiotErrorCodeDtoV1>();
                     _logger.LogError($"Error during reading of summoner info with following error: {errorResponse?.Status.message}");
                     return new SummonerDtoV1();
                 }
@@ -234,7 +241,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task CompareStandings(List<Standings> newStandings, CancellationToken stoppingToken)
+        private async Task CompareStandings(List<StandingsDtoV1> newStandings, CancellationToken stoppingToken)
         {
             try
             {
@@ -246,7 +253,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     return;
                 }
 
-                var swaps = new List<(int OriginalIndex, int NewIndex, Standings Item)>();
+                var swaps = new List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)>();
 
                 // Check each item in the original list
                 for (int i = 0; i < oldStandings.Count(); i++)
@@ -271,7 +278,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 throw;
             }
         }
-        private async Task InsertStandingsTable(List<Standings> newStandings)
+        private async Task InsertStandingsTable(List<StandingsDtoV1> newStandings)
         {
             var filter = Builders<StoredStandingsDaoV1>.Filter.Empty;
             var sort = Builders<StoredStandingsDaoV1>.Sort.Ascending(x => x.Id);
@@ -288,7 +295,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task<List<Standings>> TryGetStandings()
+        private async Task<List<StandingsDtoV1>> TryGetStandings()
         {
             try
             {
@@ -302,7 +309,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             }
         }
 
-        private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, Standings Item)> swappedPlayers, CancellationToken stoppingToken)
+        private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers, CancellationToken stoppingToken)
         {
 #if DEBUG
             return;

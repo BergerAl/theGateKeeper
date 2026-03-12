@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web) with HMR",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/TheGatekeeper.Server/bin/Debug/net10.0/TheGateKeeper.Server.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/TheGatekeeper.Server",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:8891",
+                "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
+                "DOTNET_WATCH_SUPPRESS_BROWSER": "true"
+            },
+            "justMyCode": true,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ],
+    "compounds": []
+}

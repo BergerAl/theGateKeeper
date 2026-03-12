@@ -14,6 +14,7 @@ using TheGateKeeper.Server.ConnectionManager;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
+using TheGateKeeper.Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +53,7 @@ builder.Services.AddCors(options =>
                    .AllowCredentials();
         });
 });
-# endif
+#endif
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var connectionString = SecretsHelper.GetSecret(builder.Configuration, "mongoDbConnectionString");
@@ -73,8 +74,10 @@ builder.Services.Configure<HostOptions>(hostOptions =>
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
 builder.Services.AddHostedService<StartUpService>();
+builder.Services.AddHostedService<ItemSeedService>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddHostedService<ScheduledTaskService>();
+builder.Services.AddHostedService<MatchWatcherService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
@@ -85,6 +88,11 @@ builder.Services.AddControllers()
      {
          options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
      });
+// Configure JSON options for minimal APIs
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -99,7 +107,8 @@ if (app.Environment.IsDevelopment())
 }
 #if DEBUG
 app.UseCors("_myAllowSpecificOrigins");
-# endif
+#endif
+
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     Predicate = _ => true,
@@ -110,6 +119,8 @@ app.MapHub<EventHub>("/backendUpdate");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// Map endpoints instead of controllers
+app.MapRiotApiEndpoints();
+app.MapAppConfigurationEndpoints();
 
 app.Run();

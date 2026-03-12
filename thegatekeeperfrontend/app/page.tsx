@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { AppConfigurationDtoV1, FrontEndInfo, GateKeeperAppInfo, setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
+import { setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
@@ -13,10 +13,11 @@ import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, fetchG
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
 import { AuthProvider } from "react-oidc-context";
+import { PWAInstallPrompt } from "./components/installPrompt";
+import { FrontEndInfoDtoV1, GateKeeperAppInfoDtoV1, AppConfigurationDtoV1 } from "@/types";
 
 function App() {
   const dispatch = useAppDispatch()
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.userSlice.selectedTheme)
   const oidcConfig = {
@@ -33,24 +34,20 @@ function App() {
       .withUrl(`${domainUrlPrefix()}/backendUpdate`)
       .build();
 
-    newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfo[]) => {
+    newConnection.on("ReceiveFrontEndInfo", (frontEndInfo: FrontEndInfoDtoV1[]) => {
       dispatch(updateUsersIfBlocked(frontEndInfo))
     });
     newConnection.on("UpdateConfigurationView", (appConfiguration: AppConfigurationDtoV1) => {
       dispatch(updateAppConfig(appConfiguration))
     });
-    newConnection.on("UsersOnline", (usersOnline: GateKeeperAppInfo) => {
+    newConnection.on("UsersOnline", (usersOnline: GateKeeperAppInfoDtoV1) => {
       dispatch(setUsersOnline(usersOnline))
     });
 
     newConnection.start().catch(err => console.error('Error starting connection:', err));
 
-    setConnection(newConnection);
-
     return () => {
-      if (connection) {
-        connection.stop();
-      }
+      newConnection.stop();
     };
     // eslint-disable-next-line
   }, []);
@@ -82,6 +79,7 @@ function App() {
             <ThemeProvider theme={theme === 'light' ? lightTheme :
               theme === 'dark' ? darkTheme :
                 vibrantTheme}>
+              <PWAInstallPrompt />
               <SimpleSnackbar />
               <AdminControl />
               <TheGateKeeper />

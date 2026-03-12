@@ -1,8 +1,8 @@
-﻿
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using TheGateKeeper.Server.AppControl;
 using TheGateKeeper.Server.RiotsApiService;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.VotingService
 {
@@ -50,7 +50,7 @@ namespace TheGateKeeper.Server.VotingService
 
         }
 
-        public async Task<VotingCallResult> VoteForUser(string userName)
+        public async Task<VotingCallResultDtoV1> VoteForUser(string userName)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace TheGateKeeper.Server.VotingService
                 var config = await _appControl.GetConfigurationAsync();
                 if (config.VotingDisabled)
                 {
-                    return new VotingCallResult() { Success = false, ErrorMessage = $"Voting ist currently disabled!" };
+                    return new VotingCallResultDtoV1() { Success = false, ErrorMessage = $"Voting ist currently disabled!" };
                 }
 #endif
                 var filter = Builders<PlayerDaoV1>.Filter.Eq(doc => doc.UserName, userName);
@@ -67,14 +67,14 @@ namespace TheGateKeeper.Server.VotingService
                 {
                     var update = Builders<PlayerDaoV1>.Update.Set(doc => doc.Voting, new VotingDaoV1() { isBlocked = true, voteBlockedUntil = DateTime.UtcNow.AddSeconds(30), countAmount = ++ player.Voting.countAmount });
                     await _collection.UpdateOneAsync(filter, update);
-                    return new VotingCallResult() { Success = true };
+                    return new VotingCallResultDtoV1() { Success = true };
                 }
-                return new VotingCallResult() { Success = false, ErrorMessage = $"Voting user {userName} wasn't available, because he is still blocked" };
+                return new VotingCallResultDtoV1() { Success = false, ErrorMessage = $"Voting user {userName} wasn't available, because he is still blocked" };
             }
             catch (Exception e)
             {
                 _logger.LogError($"Voting user {userName} wasn't succesful with Exception {e}");
-                return new VotingCallResult() { Success = false, ErrorMessage = $"Voting user {userName} wasn't succesful" };
+                return new VotingCallResultDtoV1() { Success = false, ErrorMessage = $"Voting user {userName} wasn't succesful" };
             }
 
             throw new NotImplementedException();

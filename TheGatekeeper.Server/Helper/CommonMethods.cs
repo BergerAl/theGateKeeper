@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server
 {
     public static class CommonMethods
     {
-        public static IEnumerable<FrontEndInfo> SortUsers(this IEnumerable<FrontEndInfo> users)
+        public static IEnumerable<FrontEndInfoDtoV1> SortUsers(this IEnumerable<FrontEndInfoDtoV1> users)
         {
             var customTierRank = new Dictionary<string, int>
                 {
@@ -33,39 +35,62 @@ namespace TheGateKeeper.Server
                 customRankRank.ContainsKey(x.rank) ? customRankRank[x.rank] : int.MaxValue).ThenByDescending(x => x.leaguePoints).ToList();
         }
 
-        public static async Task<IEnumerable<FrontEndInfo>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection, IMapper mapper)
+        public static async Task<IEnumerable<FrontEndInfoDtoV1>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection, IMapper mapper, ILogger logger)
         {       
             var players = await collection.Find(_ => true).ToListAsync();
-            return players.PlayerToFrontEndInfo(mapper).SortUsers();
+            return players.PlayerToFrontEndInfo(mapper, logger).SortUsers();
         }
 
-        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfo(this List<PlayerDaoV1> players, IMapper mapper)
+        public static IEnumerable<FrontEndInfoDtoV1> PlayerToFrontEndInfo(this List<PlayerDaoV1> players, IMapper mapper, ILogger logger)
         {
-            var responseList = new List<FrontEndInfo>();
-            foreach (var player in players)
-            {
-                var element = player.LeagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First();
-                var frontEndInfo = new FrontEndInfo()
+            try {
+                var responseList = new List<FrontEndInfoDtoV1>();
+                foreach (var player in players)
                 {
-                    leaguePoints = element.leaguePoints,
-                    name = player.UserName,
-                    rank = element.rank,
-                    tier = element.tier,
-                    playedGames = element.wins + element.losses,
-                    voting = mapper.Map<VotingDtoV1>(player.Voting)
-                };
-                responseList.Add(frontEndInfo);
+                    var element = player.LeagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5")?.FirstOrDefault();
+                    if (element == null)
+                    {
+                        logger.LogInformation($"No RANKED_SOLO_5x5 entry found for player {player.UserName}");
+                        var defaultFrontEndInfo = new FrontEndInfoDtoV1()
+                        {
+                            leaguePoints = 0,
+                            name = player.UserName,
+                            rank = "Loves his wood",
+                            tier = "UNRANKED",
+                            playedGames = 0,
+                            voting = mapper.Map<VotingDtoV1>(player.Voting)
+                        };
+                        responseList.Add(defaultFrontEndInfo);
+                        continue;
+                    }
+                    var frontEndInfo = new FrontEndInfoDtoV1()
+                    {
+                        leaguePoints = element.leaguePoints,
+                        name = player.UserName,
+                        rank = element.rank,
+                        tier = element.tier,
+                        playedGames = element.wins + element.losses,
+                        voting = mapper.Map<VotingDtoV1>(player.Voting)
+                    };
+                    responseList.Add(frontEndInfo);
+                }
+                return responseList;
             }
-            return responseList;
+            catch (Exception ex)
+            {
+                logger.LogError($"Error in PlayerToFrontEndInfo: {ex.Message}. StackTrace: {ex.StackTrace}");
+                return new List<FrontEndInfoDtoV1>();
+            }
+
         }
 
-        public static IEnumerable<FrontEndInfo> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players)
+        public static IEnumerable<FrontEndInfoDtoV1> PlayerToFrontEndInfoUnblocked(this List<PlayerDaoV1> players)
         {
-            var responseList = new List<FrontEndInfo>();
+            var responseList = new List<FrontEndInfoDtoV1>();
             foreach (var player in players)
             {
                 var element = player.LeagueEntries.Where(x => x.queueType == "RANKED_SOLO_5x5").First();
-                var frontEndInfo = new FrontEndInfo()
+                var frontEndInfo = new FrontEndInfoDtoV1()
                 {
                     leaguePoints = element.leaguePoints,
                     name = player.UserName,
@@ -79,12 +104,12 @@ namespace TheGateKeeper.Server
             return responseList;
         }
 
-        public static IEnumerable<Standings> FrontEndInfoListToStandings(this List<FrontEndInfo> info)
+        public static IEnumerable<StandingsDtoV1> FrontEndInfoListToStandings(this List<FrontEndInfoDtoV1> info)
         {
-            var responseList = new List<Standings>();
+            var responseList = new List<StandingsDtoV1>();
             foreach (var player in info)
             {
-                var frontEndInfo = new Standings()
+                var frontEndInfo = new StandingsDtoV1()
                 {
                     leaguePoints = player.leaguePoints,
                     name = player.name,

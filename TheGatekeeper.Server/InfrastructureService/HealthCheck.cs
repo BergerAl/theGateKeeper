@@ -22,7 +22,6 @@ namespace TheGateKeeper.Server.InfrastructureService
         {
             try
             {
-                // Replace with your target URL
                 var response = await _httpClient.GetAsync($"{lolStatusApi}{_riotApi.GetCurrentApiKey()}",
                     cancellationToken);
 
