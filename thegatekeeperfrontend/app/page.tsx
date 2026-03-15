@@ -21,9 +21,9 @@ function App() {
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.userSlice.selectedTheme)
   const oidcConfig = {
-    authority: "http://localhost:8892/realms/thegatekeeper",
+    authority: "https://auth.bergeral.me/realms/thegatekeeper",
     client_id: "gateKeeperAppfrontEndClient",
-    redirect_uri: "http://localhost:8891/", //3000
+    redirect_uri: "https://bergeral.me/",
     response_type: "code",
     automaticSilentRenew: true,
     loadUserInfo: true,

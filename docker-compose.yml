@@ -58,6 +58,12 @@ services:
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
+      # Public-facing URL Keycloak will use in tokens and redirects
+      KC_HOSTNAME: https://auth.bergeral.me
+      KC_HOSTNAME_STRICT: "false"
+      # Trust forwarded headers from Cloudflare (terminates TLS upstream)
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
     # Keycloak does not support _FILE env var suffix, so we read the secrets manually
     entrypoint: ["/bin/bash", "-c", "export KEYCLOAK_ADMIN=$$(cat /run/secrets/keycloak_admin) && export KEYCLOAK_ADMIN_PASSWORD=$$(cat /run/secrets/keycloak_admin_password) && exec /opt/keycloak/bin/kc.sh start-dev"]
     ports:
