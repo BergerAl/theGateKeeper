@@ -86,8 +86,7 @@ services:
       POSTGRES_PASSWORD: keycloak
     volumes:
       - keycloak-db-data:/var/lib/postgresql/data
-      # restore disabled: admin credentials changed, fresh init needed to create new admin
-      # - ./backups/keycloak_dump_utf8.sql:/docker-entrypoint-initdb.d/keycloak_dump_utf8.sql:ro
+      - ./backups/keycloak_dump_utf8.sql:/docker-entrypoint-initdb.d/keycloak_dump_utf8.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
       interval: 5s
