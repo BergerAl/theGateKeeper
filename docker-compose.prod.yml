@@ -1,0 +1,6 @@
+# Apply this on the Raspberry Pi for production:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  keycloak:
+    environment:
+      KC_PROXY_HEADERS: xforwarded
