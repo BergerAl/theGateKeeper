@@ -38,7 +38,7 @@ builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddSingleton<IAppControl, AppControl>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
 builder.Services.AddHttpClient();
 #if DEBUG
 builder.Services.AddCors(options =>
@@ -73,11 +73,14 @@ builder.Services.Configure<HostOptions>(hostOptions =>
 {
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
+builder.Services.AddSingleton<IWebPushNotificationService, WebPushNotificationService>();
 builder.Services.AddHostedService<StartUpService>();
-// builder.Services.AddHostedService<ItemSeedService>();
-// builder.Services.AddHostedService<BackgroundWorker>();
-// builder.Services.AddHostedService<ScheduledTaskService>();
-// builder.Services.AddHostedService<MatchWatcherService>();
+#if !DEBUG
+builder.Services.AddHostedService<ItemSeedService>();
+builder.Services.AddHostedService<BackgroundWorker>();
+builder.Services.AddHostedService<ScheduledTaskService>();
+builder.Services.AddHostedService<MatchWatcherService>();
+#endif
 builder.Services.AddSignalR();
 
 builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
@@ -122,5 +125,6 @@ app.UseAuthorization();
 // Map endpoints instead of controllers
 app.MapRiotApiEndpoints();
 app.MapAppConfigurationEndpoints();
+app.MapNotificationEndpoints();
 
 app.Run();

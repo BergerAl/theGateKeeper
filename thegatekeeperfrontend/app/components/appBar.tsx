@@ -10,6 +10,9 @@ import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { domainUrlPrefix } from '@/store/backEndCalls';
@@ -17,6 +20,7 @@ import { Tooltip } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import { translateUsersOnline } from '../common/common';
 import { useAuth } from 'react-oidc-context';
+import { usePushNotifications } from '../common/usePushNotifications';
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
@@ -25,6 +29,8 @@ function ResponsiveAppBar() {
     const usersOnline = useAppSelector(state => state.viewStateSlice.appInfo.usersOnline)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const auth = useAuth();
+    const accessToken = auth.user?.access_token;
+    const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications(accessToken);
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -167,6 +173,26 @@ function ResponsiveAppBar() {
                             </Button>
                         ))}
                     </Box>
+                    {/* Notification Bell — visible only when logged in */}
+                    {auth.isAuthenticated && (
+                        <Tooltip title={isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications'}>
+                            <span>
+                                <IconButton
+                                    size="large"
+                                    color="inherit"
+                                    onClick={isSubscribed ? unsubscribe : subscribe}
+                                    disabled={pushLoading}
+                                    aria-label={isSubscribed ? 'unsubscribe notifications' : 'subscribe notifications'}
+                                >
+                                    {pushLoading
+                                        ? <CircularProgress size={24} color="inherit" />
+                                        : isSubscribed
+                                            ? <NotificationsIcon />
+                                            : <NotificationsOffIcon />}
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    )}
                     {/* User Button */}
                     <Box sx={{ flexGrow: 0 }}>
                         {auth && (

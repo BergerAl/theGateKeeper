@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
+using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGatekeeper.Contracts;
 
@@ -22,8 +23,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
         private readonly IMapper _mapper;
+        private readonly IWebPushNotificationService _pushService;
         
-        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper)
+        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper, IWebPushNotificationService pushService)
         {
             _logger = logger;
             _mapper = mapper;
@@ -35,6 +37,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _historyCollection = database.GetCollection<RankTimeLineEntryDaoV1>("ranktimeline");
             _riotApi = riotApi;
             _webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
+            _pushService = pushService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -270,6 +273,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
                     await NotifyDiscord(swaps, stoppingToken).ConfigureAwait(false);
+                    await NotifyPush(swaps).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -307,6 +311,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 _logger.LogError($"Error during finding the standings table {e}");
                 throw;
             }
+        }
+
+        private async Task NotifyPush(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers)
+        {
+            var names = string.Join(", ", swappedPlayers.Select(s => s.Item.name));
+            await _pushService.SendNotificationToAllAsync(
+                "The GateKeeper — Rankings changed!",
+                $"{names} moved in the standings.");
         }
 
         private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers, CancellationToken stoppingToken)

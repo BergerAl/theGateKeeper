@@ -7,7 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button } from '@mui/material'
+import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
@@ -29,6 +29,9 @@ const AdminControl = () => {
     const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
     const auth = useAuth();
+    const [broadcastTitle, setBroadcastTitle] = React.useState('The GateKeeper');
+    const [broadcastBody, setBroadcastBody] = React.useState('');
+    const [broadcasting, setBroadcasting] = React.useState(false);
 
     // Check for Admin role in access token
     // Option A: uses a custom realm role named 'Admin' assigned to the user in Keycloak
@@ -92,6 +95,23 @@ const AdminControl = () => {
             return newConfig
         })
     }
+
+    const handleBroadcast = async () => {
+        if (!broadcastTitle || !broadcastBody) return;
+        setBroadcasting(true);
+        try {
+            await fetch('/api/notifications/broadcast', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+                body: JSON.stringify({ title: broadcastTitle, body: broadcastBody }),
+            });
+        } finally {
+            setBroadcasting(false);
+        }
+    };
 
     if (!hasAdminRole) return null;
 
@@ -184,6 +204,30 @@ const AdminControl = () => {
                 </TableContainer>
                 <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button>
                 <Button onPointerDown={() => dispatch(updateConfiguration({ appConfig, token: auth.user?.access_token }))} variant="contained">{"Save config"}</Button>
+                <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <TextField
+                        label="Notification title"
+                        size="small"
+                        value={broadcastTitle}
+                        onChange={e => setBroadcastTitle(e.target.value)}
+                    />
+                    <TextField
+                        label="Message"
+                        size="small"
+                        multiline
+                        rows={2}
+                        value={broadcastBody}
+                        onChange={e => setBroadcastBody(e.target.value)}
+                    />
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        disabled={broadcasting || !broadcastBody}
+                        onPointerDown={handleBroadcast}
+                    >
+                        {broadcasting ? 'Sending...' : 'Send push to all'}
+                    </Button>
+                </Box>
             </SwipeableDrawer>
         </>
     )
