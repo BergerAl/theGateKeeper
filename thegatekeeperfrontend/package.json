@@ -20,6 +20,7 @@
     "react-chartjs-2": "^5.3.1",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.3",
+    "react-oidc-context": "^3.3.0",
     "react-redux": "^9.2.0"
   },
   "devDependencies": {

@@ -32,6 +32,7 @@ TheGateKeeper.Server/wwwroot/
 *.user
 api_key
 secrets/**
+backups/**
 
 /.pnp
 .pnp.*

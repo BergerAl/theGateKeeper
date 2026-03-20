@@ -12,7 +12,7 @@ import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
 import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
-
+import { useAuth } from 'react-oidc-context';
 interface SelectOption {
     value: string
     label: string
@@ -28,6 +28,29 @@ const AdminControl = () => {
     const actualConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
     const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
+    const auth = useAuth();
+
+    // Check for Admin role in access token
+    // Option A: uses a custom realm role named 'Admin' assigned to the user in Keycloak
+    // Option B: uses the built-in 'realm-admin' role from the realm-management client
+    const hasAdminRole = (() => {
+        if (auth.user?.access_token) {
+            try {
+                const base64url = auth.user.access_token.split('.')[1]
+                    .replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(base64url));
+
+                if (Array.isArray(payload.realm_access?.roles) && payload.realm_access.roles.includes('Admin')) return true;
+
+                const realmMgmt = payload.resource_access?.['realm-management'];
+                if (Array.isArray(realmMgmt?.roles) && realmMgmt.roles.includes('realm-admin')) return true;
+            } catch {
+                return false;
+            }
+        }
+        return false;
+    })();
+
     useEffect(() => {
         dispatch(fetchCurrentVoteStandings())
         // eslint-disable-next-line
@@ -69,6 +92,8 @@ const AdminControl = () => {
             return newConfig
         })
     }
+
+    if (!hasAdminRole) return null;
 
     return (
         <>
@@ -158,7 +183,7 @@ const AdminControl = () => {
                     </Table>
                 </TableContainer>
                 <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button>
-                <Button onPointerDown={() => dispatch(updateConfiguration(appConfig))} variant="contained">{"Save config"}</Button>
+                <Button onPointerDown={() => dispatch(updateConfiguration({ appConfig, token: auth.user?.access_token }))} variant="contained">{"Save config"}</Button>
             </SwipeableDrawer>
         </>
     )

@@ -1,3 +1,5 @@
+using Keycloak.AuthServices.Authentication;
+using Keycloak.AuthServices.Authorization;
 using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -72,11 +74,20 @@ builder.Services.Configure<HostOptions>(hostOptions =>
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
 builder.Services.AddHostedService<StartUpService>();
-builder.Services.AddHostedService<ItemSeedService>();
-builder.Services.AddHostedService<BackgroundWorker>();
-builder.Services.AddHostedService<ScheduledTaskService>();
-builder.Services.AddHostedService<MatchWatcherService>();
+// builder.Services.AddHostedService<ItemSeedService>();
+// builder.Services.AddHostedService<BackgroundWorker>();
+// builder.Services.AddHostedService<ScheduledTaskService>();
+// builder.Services.AddHostedService<MatchWatcherService>();
 builder.Services.AddSignalR();
+
+builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
+builder.Services.AddAuthorization().AddKeycloakAuthorization(builder.Configuration);
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+     {
+         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+     });
 // Configure JSON options for minimal APIs
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -105,6 +116,7 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
 app.UseHttpsRedirection();
 app.UseRouting();
 app.MapHub<EventHub>("/backendUpdate");
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Map endpoints instead of controllers

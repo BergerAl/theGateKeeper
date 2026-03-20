@@ -1,0 +1,7 @@
+# Automatically applied on top of docker-compose.yml during local development.
+# This file should NOT be copied to the Raspberry Pi / production.
+services:
+  keycloak:
+    environment:
+      KC_HOSTNAME: http://localhost:8892
+      KC_HTTP_ENABLED: "true"

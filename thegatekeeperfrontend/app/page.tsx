@@ -9,9 +9,10 @@ import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
 import { lightTheme, darkTheme, vibrantTheme } from "@/context/themes";
-import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, adminAccess, fetchGateKeeperInfo } from "@/store/backEndCalls";
+import { fetchAllUsers, domainUrlPrefix, healthCheck, fetchConfiguration, fetchGateKeeperInfo } from "@/store/backEndCalls";
 import { SimpleSnackbar } from "./components/snackBar";
 import AdminControl from "./components/adminControl";
+import { AuthProvider } from "react-oidc-context";
 import { PWAInstallPrompt } from "./components/installPrompt";
 import { FrontEndInfoDtoV1, GateKeeperAppInfoDtoV1, AppConfigurationDtoV1 } from "@/types";
 
@@ -19,6 +20,14 @@ function App() {
   const dispatch = useAppDispatch()
   const [user, setUser] = useState<User>({})
   const theme = useAppSelector(state => state.userSlice.selectedTheme)
+  const oidcConfig = {
+    authority: process.env.NEXT_PUBLIC_OIDC_AUTHORITY!,
+    client_id: "gateKeeperAppfrontEndClient",
+    redirect_uri: process.env.NEXT_PUBLIC_OIDC_REDIRECT_URI!,
+    response_type: "code",
+    automaticSilentRenew: true,
+    loadUserInfo: true,
+  };
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
@@ -65,17 +74,19 @@ function App() {
           theme === 'dark' ? darkTheme.palette.background.paper :
             vibrantTheme.palette.background.paper, minHeight: '98vh'
       }}>
-        <CombinedContext.Provider value={value}>
-          <ThemeProvider theme={theme === 'light' ? lightTheme :
-            theme === 'dark' ? darkTheme :
-              vibrantTheme}>
-            <PWAInstallPrompt />
-            <SimpleSnackbar />
-            {adminAccess() && <AdminControl />}
-            <TheGateKeeper />
-            <ControlPanel />
-          </ThemeProvider>
-        </CombinedContext.Provider>
+        <AuthProvider {...oidcConfig}>
+          <CombinedContext.Provider value={value}>
+            <ThemeProvider theme={theme === 'light' ? lightTheme :
+              theme === 'dark' ? darkTheme :
+                vibrantTheme}>
+              <PWAInstallPrompt />
+              <SimpleSnackbar />
+              <AdminControl />
+              <TheGateKeeper />
+              <ControlPanel />
+            </ThemeProvider>
+          </CombinedContext.Provider>
+        </AuthProvider>
       </body>
     </html>
   );

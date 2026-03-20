@@ -6,7 +6,8 @@ module.exports = (phase, { defaultConfig }) => {
   if (phase === PHASE_DEVELOPMENT_SERVER) {
     return {
       env: {
-        adminAccess: "true"
+        NEXT_PUBLIC_OIDC_AUTHORITY: "http://localhost:8892/realms/thegatekeeper",
+        NEXT_PUBLIC_OIDC_REDIRECT_URI: "http://localhost:3000/",
       },
       devIndicators: false,
       async rewrites() {
@@ -26,10 +27,12 @@ module.exports = (phase, { defaultConfig }) => {
 
   return {
     env: {
-      //urlPrefix: "/gatekeeper"
+      urlPrefix: "",
+      NEXT_PUBLIC_OIDC_AUTHORITY: "https://auth.bergeral.me/realms/thegatekeeper",
+      NEXT_PUBLIC_OIDC_REDIRECT_URI: "https://bergeral.me/",
     },
     devIndicators: false,
-    //assetPrefix: "/gatekeeper",
+    assetPrefix: "",
     output: 'export'
   }
 }
