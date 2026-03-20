@@ -46,6 +46,8 @@ services:
       - vapid_public_key
       - vapid_private_key
       - vapid_subject
+      - keycloak_admin
+      - keycloak_admin_password
     ports:
       - "8891:80"
       # - "8891:8890"

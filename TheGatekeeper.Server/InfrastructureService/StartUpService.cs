@@ -65,7 +65,7 @@ namespace TheGateKeeper.Server.InfrastructureService
                 var appConfigCollection = _database.GetCollection<AppConfigurationDaoV1>("appConfiguration");
                 if (!await appConfigCollection.Find(_ => true).AnyAsync())
                 {
-                    await appConfigCollection.InsertOneAsync(new AppConfigurationDaoV1() { DisplayedView = DisplayedView.DefaultPage, VotingDisabled = false, DisplayResultsBar = false });
+                    await appConfigCollection.InsertOneAsync(new AppConfigurationDaoV1() { DisplayedView = DisplayedView.DefaultPage, VotingDisabled = false });
                 }
 
                 var gateKeeperCollection = _database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");

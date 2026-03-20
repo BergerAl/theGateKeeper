@@ -17,7 +17,9 @@ import { NavigationTab } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
+import { KeycloakUsersTab } from './keycloakUsersTab';
 import { DisplayedView } from '../../types';
+import { useAuth } from 'react-oidc-context';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
@@ -25,6 +27,8 @@ export const TheGateKeeper: React.FC = () => {
   const gateKeeperName = useAppSelector(state => state.viewStateSlice.gateKeeperInfo.name)
   const userNavigation = useAppSelector(state => state.userSlice.currentNavigation)
   const dispatch = useAppDispatch()
+  const auth = useAuth();
+  const accessToken = auth.user?.access_token;
   return (
     <>
       <ChartComponent />
@@ -74,8 +78,12 @@ export const TheGateKeeper: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>}
-      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VoteStandings &&
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.Results &&
         <CurrentVoteStandings />}
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.KeycloakUsers &&
+        <KeycloakUsersTab accessToken={accessToken} />}
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.UserVotings &&
+        null /* UserVotings — to be implemented */}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage &&
         <ResultPage />}

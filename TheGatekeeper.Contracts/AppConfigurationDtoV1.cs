@@ -13,6 +13,6 @@ public class AppConfigurationDtoV1
     [JsonPropertyName("votingDisabled")]
     public bool VotingDisabled { get; set; }
 
-    [JsonPropertyName("displayResultsBar")]
-    public bool DisplayResultsBar { get; set; }
+    [JsonPropertyName("enabledTabs")]
+    public List<string> EnabledTabs { get; set; } = ["LeagueStandings", "Results", "Users", "UserVotings"];
 }

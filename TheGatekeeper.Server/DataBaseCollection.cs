@@ -50,7 +50,7 @@ namespace TheGateKeeper.Server
         [BsonRepresentation(BsonType.String)]
         public DisplayedView DisplayedView { get; set; }
         public bool VotingDisabled { get; set; }
-        public bool DisplayResultsBar { get; set; }
+        public List<string> EnabledTabs { get; set; } = ["LeagueStandings", "Results", "Users", "UserVotings"];
     }
 
     [BsonIgnoreExtraElements]

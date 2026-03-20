@@ -28,7 +28,6 @@ import { usePushNotifications } from '../common/usePushNotifications';
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
-    const resultsPageEnabled = useAppSelector(state => state.viewStateSlice.appConfiguration.displayResultsBar);
     const usersOnline = useAppSelector(state => state.viewStateSlice.appInfo.usersOnline)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const auth = useAuth();
@@ -74,7 +73,11 @@ function ResponsiveAppBar() {
         setAnchorEl(null);
     };
 
-    const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VoteStandings || resultsPageEnabled)
+    const enabledTabs = useAppSelector(state => state.viewStateSlice.appConfiguration.enabledTabs);
+
+    const navigationOptions = Object.values(NavigationTab).filter(value => {
+        return enabledTabs.includes(value);
+    });
     return (
         <>
         <AppBar position="static">

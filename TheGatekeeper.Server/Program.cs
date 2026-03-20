@@ -126,5 +126,6 @@ app.UseAuthorization();
 app.MapRiotApiEndpoints();
 app.MapAppConfigurationEndpoints();
 app.MapNotificationEndpoints();
+app.MapKeycloakEndpoints();
 
 app.Run();

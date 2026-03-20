@@ -5,7 +5,9 @@ import { loadThemeFromStorage, saveThemeToStorage } from '../themeStorage';
 
 export enum NavigationTab {
   LeagueStandings = "LeagueStandings",
-  VoteStandings = "VoteStandings"
+  Results = "Results",
+  KeycloakUsers = "Users",
+  UserVotings = "UserVotings"
 }
 
 export interface UserSlice {

@@ -7,7 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField } from '@mui/material'
+import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField, FormGroup, FormControlLabel, Checkbox, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
@@ -88,13 +88,17 @@ const AdminControl = () => {
         })
     }
 
-    const handleResultsBarChange = (event: SelectChangeEvent<string>) => {
+    const configurableTabs = ['LeagueStandings', 'Results', 'Users', 'UserVotings'];
+
+    const handleTabToggle = (tab: string) => {
         setAppConfig(currentConfig => {
-            let newConfig = { ...currentConfig }
-            newConfig.displayResultsBar = stringToBoolean(event.target.value)
-            return newConfig
-        })
-    }
+            const enabled = currentConfig.enabledTabs ?? [];
+            const newTabs = enabled.includes(tab)
+                ? enabled.filter(t => t !== tab)
+                : [...enabled, tab];
+            return { ...currentConfig, enabledTabs: newTabs };
+        });
+    };
 
     const handleBroadcast = async () => {
         if (!broadcastTitle || !broadcastBody) return;
@@ -166,21 +170,24 @@ const AdminControl = () => {
                             </MenuItem>
                         </Select>
                     </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Display Result Bar</InputLabel>
-                        <Select
-                            value={appConfig.displayResultsBar as any as string}
-                            label="Select an option"
-                            onChange={handleResultsBarChange}
-                        >
-                            <MenuItem key={"false"} value={"false"}>
-                                {"false"}
-                            </MenuItem>
-                            <MenuItem key={"true"} value={"true"}>
-                                {"true"}
-                            </MenuItem>
-                        </Select>
-                    </FormControl>
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">Visible tabs</Typography>
+                        <FormGroup>
+                            {configurableTabs.map(tab => (
+                                <FormControlLabel
+                                    key={tab}
+                                    control={
+                                        <Checkbox
+                                            checked={(appConfig.enabledTabs ?? []).includes(tab)}
+                                            onChange={() => handleTabToggle(tab)}
+                                            size="small"
+                                        />
+                                    }
+                                    label={tab}
+                                />
+                            ))}
+                        </FormGroup>
+                    </Box>
                 </Box>
                 <TableContainer component={Paper} >
                     <Table sx={{ minWidth: 200 }} aria-label="simple table">
