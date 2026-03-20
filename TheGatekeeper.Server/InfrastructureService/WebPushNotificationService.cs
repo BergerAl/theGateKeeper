@@ -93,9 +93,10 @@ namespace TheGateKeeper.Server.InfrastructureService
             catch (WebPushException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone
                                            || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Subscription is no longer valid — remove it
+                // Subscription is no longer valid — attempt cleanup but don't crash if permissions are missing
                 _logger.LogInformation("Push subscription for user {UserId} expired, removing.", sub.UserId);
-                await RemoveSubscriptionAsync(sub.UserId);
+                try { await RemoveSubscriptionAsync(sub.UserId); }
+                catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Could not remove expired subscription for user {UserId}.", sub.UserId); }
             }
             catch (Exception ex)
             {
