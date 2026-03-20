@@ -58,6 +58,19 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     }
 
                     var appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
+
+                    // Auto-disable voting when the timer expires
+                    if (appConfig?.VotingEndsAt != null && appConfig.VotingEndsAt <= now && !appConfig.VotingDisabled)
+                    {
+                        _logger.LogInformation("Voting timer expired, auto-disabling voting.");
+                        var emptyFilter2 = Builders<AppConfigurationDaoV1>.Filter.Empty;
+                        var timerUpdate = Builders<AppConfigurationDaoV1>.Update
+                            .Set(doc => doc.VotingDisabled, true)
+                            .Set(doc => doc.VotingEndsAt, (DateTime?)null);
+                        await _appConfiguration.UpdateOneAsync(emptyFilter2, timerUpdate);
+                        appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
+                    }
+
                     if (appConfig != _appConfig)
                     {
                         _appConfig = appConfig;

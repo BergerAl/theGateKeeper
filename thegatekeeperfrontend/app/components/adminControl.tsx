@@ -7,7 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField, FormGroup, FormControlLabel, Checkbox, Typography } from '@mui/material'
+import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField, FormGroup, FormControlLabel, Checkbox, Typography, Switch } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
@@ -18,16 +18,13 @@ interface SelectOption {
     label: string
 }
 
-function stringToBoolean(str: string): boolean {
-    return str.toLowerCase() === 'true';
-}
-
 const AdminControl = () => {
     const dispatch = useAppDispatch()
     const [open, setOpen] = React.useState(false)
     const actualConfig = useAppSelector(state => state.viewStateSlice.appConfiguration)
     const currentVoting = useAppSelector(state => state.viewStateSlice.voteStandings)
     const [appConfig, setAppConfig] = React.useState<AppConfigurationDtoV1>(actualConfig)
+    const [timerMinutes, setTimerMinutes] = React.useState(0);
     const auth = useAuth();
     const [broadcastTitle, setBroadcastTitle] = React.useState('The GateKeeper');
     const [broadcastBody, setBroadcastBody] = React.useState('');
@@ -69,6 +66,7 @@ const AdminControl = () => {
 
     useEffect(() => {
         setAppConfig(actualConfig)
+        setTimerMinutes(0)
         // eslint-disable-next-line
     }, [actualConfig]);
 
@@ -80,13 +78,14 @@ const AdminControl = () => {
         })
     }
 
-    const handleVotingChanged = (event: SelectChangeEvent<string>) => {
-        setAppConfig(currentConfig => {
-            let newConfig = { ...currentConfig }
-            newConfig.votingDisabled = stringToBoolean(event.target.value)
-            return newConfig
-        })
-    }
+    const handleVotingToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const enabled = event.target.checked;
+        setAppConfig(currentConfig => ({
+            ...currentConfig,
+            votingDisabled: !enabled,
+        }));
+        if (!enabled) setTimerMinutes(0);
+    };
 
     const configurableTabs = ['LeagueStandings', 'Results', 'Users', 'UserVotings'];
 
@@ -155,21 +154,43 @@ const AdminControl = () => {
                             ))}
                         </Select>
                     </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Disable voting mechanism</InputLabel>
-                        <Select
-                            value={appConfig.votingDisabled as any as string}
-                            label="Select an option"
-                            onChange={handleVotingChanged}
-                        >
-                            <MenuItem key={"false"} value={"false"}>
-                                {"false"}
-                            </MenuItem>
-                            <MenuItem key={"true"} value={"true"}>
-                                {"true"}
-                            </MenuItem>
-                        </Select>
-                    </FormControl>
+                    <Box sx={{ mt: 1 }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={!appConfig.votingDisabled}
+                                    onChange={handleVotingToggle}
+                                />
+                            }
+                            label={appConfig.votingDisabled ? 'Voting disabled' : 'Voting enabled'}
+                        />
+                        {!appConfig.votingDisabled && (
+                            <>
+                                <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                                    <InputLabel>Auto-disable after</InputLabel>
+                                    <Select
+                                        value={timerMinutes}
+                                        label="Auto-disable after"
+                                        onChange={e => setTimerMinutes(Number(e.target.value))}
+                                    >
+                                        <MenuItem value={0}>No timer</MenuItem>
+                                        <MenuItem value={5}>5 minutes</MenuItem>
+                                        <MenuItem value={10}>10 minutes</MenuItem>
+                                        <MenuItem value={15}>15 minutes</MenuItem>
+                                        <MenuItem value={30}>30 minutes</MenuItem>
+                                        <MenuItem value={60}>1 hour</MenuItem>
+                                        <MenuItem value={120}>2 hours</MenuItem>
+                                        <MenuItem value={240}>4 hours</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                {actualConfig.votingEndsAt && (
+                                    <Typography variant="caption" color="success.main" sx={{ mt: 0.5, display: 'block' }}>
+                                        Ends at: {new Date(actualConfig.votingEndsAt).toLocaleTimeString()}
+                                    </Typography>
+                                )}
+                            </>
+                        )}
+                    </Box>
                     <Box sx={{ mt: 1 }}>
                         <Typography variant="caption" color="text.secondary">Visible tabs</Typography>
                         <FormGroup>
@@ -189,7 +210,7 @@ const AdminControl = () => {
                         </FormGroup>
                     </Box>
                 </Box>
-                <TableContainer component={Paper} >
+                {/* <TableContainer component={Paper} >
                     <Table sx={{ minWidth: 200 }} aria-label="simple table">
                         <TableHead>
                             <TableRow>
@@ -209,8 +230,21 @@ const AdminControl = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
-                <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button>
-                <Button onPointerDown={() => dispatch(updateConfiguration({ appConfig, token: auth.user?.access_token }))} variant="contained">{"Save config"}</Button>
+                <Button onPointerDown={() => dispatch(fetchCurrentVoteStandings())} variant="contained">{"Refresh"}</Button> */}
+                <Button
+                    onPointerDown={() => {
+                        const configToSave = {
+                            ...appConfig,
+                            votingEndsAt: appConfig.votingDisabled
+                                ? null
+                                : timerMinutes > 0
+                                    ? new Date(Date.now() + timerMinutes * 60000).toISOString()
+                                    : appConfig.votingEndsAt
+                        };
+                        dispatch(updateConfiguration({ appConfig: configToSave as AppConfigurationDtoV1, token: auth.user?.access_token }));
+                    }}
+                    variant="contained"
+                >{"Save config"}</Button>
                 <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <TextField
                         label="Notification title"

@@ -52,6 +52,7 @@ namespace TheGateKeeper.Server.AppControl
                 var update = Builders<AppConfigurationDaoV1>.Update
                     .Set(doc => doc.DisplayedView, appConfigurationDto.DisplayedView)
                     .Set(doc => doc.VotingDisabled, appConfigurationDto.VotingDisabled)
+                    .Set(doc => doc.VotingEndsAt, appConfigurationDto.VotingEndsAt)
                     .Set(doc => doc.EnabledTabs, appConfigurationDto.EnabledTabs);
                 await _appConfiguration.UpdateOneAsync(emptyFilter, update);
                 _logger.LogDebug($"Updated app configuration.");

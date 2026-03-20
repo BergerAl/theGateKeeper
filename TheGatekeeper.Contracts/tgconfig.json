@@ -3,6 +3,7 @@
   "createIndexFile": true,
   "enumStringInitializers": true,
   "customTypeMappings": {
-    "System.DateTime": "Date"
+    "System.DateTime": "string",
+    "System.Nullable<System.DateTime>": "string | null"
   }
 }

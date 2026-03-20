@@ -16,6 +16,7 @@ public class MappingProfile : Profile
         CreateMap<AppConfigurationDaoV1, AppConfigurationDtoV1>()
             .ForMember(dest => dest.DisplayedView, opt => opt.MapFrom(src => src.DisplayedView))
             .ForMember(dest => dest.VotingDisabled, opt => opt.MapFrom(src => src.VotingDisabled))
+            .ForMember(dest => dest.VotingEndsAt, opt => opt.MapFrom(src => src.VotingEndsAt))
             .ForMember(dest => dest.EnabledTabs, opt => opt.MapFrom(src => src.EnabledTabs));
 
         CreateMap<AppConfigurationDtoV1, AppConfigurationDaoV1>()
