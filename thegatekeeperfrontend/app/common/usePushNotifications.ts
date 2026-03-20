@@ -5,57 +5,54 @@ import { domainUrlPrefix } from '@/store/backEndCalls';
 
 const STORAGE_KEY = 'push_subscribed';
 
-function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = atob(base64);
-    const buffer = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; i++) {
-        buffer[i] = rawData.charCodeAt(i);
-    }
-    return buffer.buffer;
-}
-
 export function usePushNotifications(accessToken: string | undefined) {
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // On mount, sync state from the actual PushManager (source of truth)
     useEffect(() => {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-        navigator.serviceWorker.ready.then((registration) => {
-            registration.pushManager.getSubscription().then((sub) => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+            reg.pushManager.getSubscription().then((sub) => {
                 setIsSubscribed(!!sub);
             });
-        });
+        }).catch(() => { /* sw registration failed silently on mount */ });
     }, []);
 
-    const subscribe = useCallback(async () => {
+    const subscribe = useCallback(() => {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            alert('Push notifications are not supported in this browser.');
+            setError('Push notifications are not supported in this browser.');
             return;
         }
         if (!accessToken) {
-            alert('You must be logged in to subscribe to notifications.');
+            setError('You must be logged in to subscribe to notifications.');
             return;
         }
 
         setIsLoading(true);
-        try {
-            // 1. Fetch VAPID public key from backend
+        setError(null);
+
+        const run = async () => {
+            // 1. Ensure service worker is registered and active
+            await navigator.serviceWorker.register('/sw.js');
+            const registration = await navigator.serviceWorker.ready;
+
+            // 2. Fetch VAPID public key from backend
             const keyRes = await fetch(`${domainUrlPrefix()}/api/notifications/vapid-public-key`);
-            if (!keyRes.ok) throw new Error('Failed to fetch VAPID key');
+            if (!keyRes.ok) throw new Error('Could not reach notification service.');
             const { publicKey } = await keyRes.json();
 
-            // 2. Register service worker if needed and subscribe via PushManager
-            const registration = await navigator.serviceWorker.ready;
+            // 3. Subscribe via PushManager (prompts browser permission dialog)
+            // Pass the key as a string — browsers handle base64url decoding natively,
+            // avoiding manual ArrayBuffer conversion issues across browser versions.
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(publicKey),
+                applicationServerKey: publicKey,
             });
 
-            // 3. Send subscription to backend
+            // 4. Send subscription to backend
             const subJson = subscription.toJSON();
             const res = await fetch(`${domainUrlPrefix()}/api/notifications/subscribe`, {
                 method: 'POST',
@@ -70,25 +67,30 @@ export function usePushNotifications(accessToken: string | undefined) {
                 }),
             });
 
-            if (!res.ok) throw new Error('Failed to save subscription on server');
+            if (!res.ok) throw new Error('Failed to save subscription on server.');
             setIsSubscribed(true);
             localStorage.setItem(STORAGE_KEY, 'true');
-        } catch (err) {
-            console.error('Subscribe failed:', err);
-        } finally {
-            setIsLoading(false);
-        }
+        };
+
+        run()
+            .catch((err: unknown) => {
+                const msg = err instanceof Error ? err.message : 'Failed to subscribe.';
+                setError(msg);
+                console.warn('Subscribe failed:', err);
+            })
+            .finally(() => setIsLoading(false));
     }, [accessToken]);
 
-    const unsubscribe = useCallback(async () => {
+    const unsubscribe = useCallback(() => {
         if (!accessToken) return;
         setIsLoading(true);
-        try {
+        setError(null);
+
+        const run = async () => {
+            await navigator.serviceWorker.register('/sw.js');
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                await subscription.unsubscribe();
-            }
+            if (subscription) await subscription.unsubscribe();
 
             await fetch(`${domainUrlPrefix()}/api/notifications/unsubscribe`, {
                 method: 'DELETE',
@@ -97,12 +99,16 @@ export function usePushNotifications(accessToken: string | undefined) {
 
             setIsSubscribed(false);
             localStorage.removeItem(STORAGE_KEY);
-        } catch (err) {
-            console.error('Unsubscribe failed:', err);
-        } finally {
-            setIsLoading(false);
-        }
+        };
+
+        run()
+            .catch((err: unknown) => {
+                const msg = err instanceof Error ? err.message : 'Failed to unsubscribe.';
+                setError(msg);
+                console.warn('Unsubscribe failed:', err);
+            })
+            .finally(() => setIsLoading(false));
     }, [accessToken]);
 
-    return { isSubscribed, isLoading, subscribe, unsubscribe };
+    return { isSubscribed, isLoading, error, subscribe, unsubscribe };
 }

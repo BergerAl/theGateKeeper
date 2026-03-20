@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Text.Json;
 using TheGateKeeper.Server.InfrastructureService;
 
@@ -8,21 +7,66 @@ namespace TheGateKeeper.Server.Endpoints
     public record SubscribeRequest(string Endpoint, string P256DH, string Auth);
     public record BroadcastRequest(string Title, string Body);
 
-    internal static class ClaimsPrincipalExtensions
+    internal static class JwtHelper
     {
-        /// <summary>Checks Keycloak realm_access.roles for a given role name.</summary>
-        internal static bool HasKeycloakRealmRole(this ClaimsPrincipal user, string role)
+        /// <summary>
+        /// Manually decodes the JWT payload from the Authorization header.
+        /// Used because Keycloak audience validation may prevent middleware from populating ClaimsPrincipal.
+        /// </summary>
+        internal static JsonElement? DecodePayload(HttpRequest request)
         {
-            var realmAccess = user.FindFirstValue("realm_access");
-            if (string.IsNullOrWhiteSpace(realmAccess)) return false;
+            var authHeader = request.Headers.Authorization.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+                return null;
+
+            var token = authHeader["Bearer ".Length..];
+            var parts = token.Split('.');
+            if (parts.Length != 3) return null;
+
             try
             {
-                var doc = JsonDocument.Parse(realmAccess);
-                if (doc.RootElement.TryGetProperty("roles", out var roles))
-                    foreach (var r in roles.EnumerateArray())
-                        if (r.GetString() == role) return true;
+                var padding = (4 - parts[1].Length % 4) % 4;
+                var base64 = parts[1].Replace('-', '+').Replace('_', '/') + new string('=', padding);
+                var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+                return JsonDocument.Parse(json).RootElement.Clone();
             }
-            catch { /* malformed claim — deny */ }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static string? GetSubject(HttpRequest request)
+        {
+            var payload = DecodePayload(request);
+            if (payload is null) return null;
+            return payload.Value.TryGetProperty("sub", out var sub) ? sub.GetString() : null;
+        }
+
+        internal static bool HasRealmRole(HttpRequest request, string role)
+        {
+            var payload = DecodePayload(request);
+            if (payload is null) return false;
+            try
+            {
+                // Check realm_access.roles for a custom role (e.g. "Admin")
+                if (payload.Value.TryGetProperty("realm_access", out var realmAccess)
+                    && realmAccess.TryGetProperty("roles", out var realmRoles))
+                {
+                    foreach (var r in realmRoles.EnumerateArray())
+                        if (r.GetString() == role) return true;
+                }
+
+                // Check resource_access['realm-management'].roles for built-in "realm-admin"
+                if (payload.Value.TryGetProperty("resource_access", out var resourceAccess)
+                    && resourceAccess.TryGetProperty("realm-management", out var realmMgmt)
+                    && realmMgmt.TryGetProperty("roles", out var mgmtRoles))
+                {
+                    foreach (var r in mgmtRoles.EnumerateArray())
+                        if (r.GetString() == "realm-admin") return true;
+                }
+            }
+            catch { /* malformed */ }
             return false;
         }
     }
@@ -39,17 +83,15 @@ namespace TheGateKeeper.Server.Endpoints
             {
                 return Results.Ok(new { publicKey = pushService.GetVapidPublicKey() });
             })
-            .WithName("GetVapidPublicKey")
-            .AllowAnonymous();
+            .WithName("GetVapidPublicKey");
 
             // Authenticated: save push subscription for the calling user
             group.MapPost("subscribe", async (
                 [FromBody] SubscribeRequest request,
-                ClaimsPrincipal user,
+                HttpRequest httpRequest,
                 IWebPushNotificationService pushService) =>
             {
-                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
-                          ?? user.FindFirstValue("sub");
+                var userId = JwtHelper.GetSubject(httpRequest);
                 if (string.IsNullOrWhiteSpace(userId))
                     return Results.Unauthorized();
 
@@ -61,32 +103,28 @@ namespace TheGateKeeper.Server.Endpoints
                 await pushService.SaveSubscriptionAsync(userId, request.Endpoint, request.P256DH, request.Auth);
                 return Results.Created("/api/notifications/subscribe", null);
             })
-            .WithName("Subscribe")
-            .RequireAuthorization();
+            .WithName("Subscribe");
 
             // Authenticated: remove push subscription for the calling user
             group.MapDelete("unsubscribe", async (
-                ClaimsPrincipal user,
+                HttpRequest httpRequest,
                 IWebPushNotificationService pushService) =>
             {
-                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
-                          ?? user.FindFirstValue("sub");
+                var userId = JwtHelper.GetSubject(httpRequest);
                 if (string.IsNullOrWhiteSpace(userId))
                     return Results.Unauthorized();
 
                 await pushService.RemoveSubscriptionAsync(userId);
                 return Results.Ok();
             })
-            .WithName("Unsubscribe")
-            .RequireAuthorization();
+            .WithName("Unsubscribe");
 
-            // Admin: send a test notification to the calling user
+            // Send a test notification to the calling user
             group.MapPost("test", async (
-                ClaimsPrincipal user,
+                HttpRequest httpRequest,
                 IWebPushNotificationService pushService) =>
             {
-                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
-                          ?? user.FindFirstValue("sub");
+                var userId = JwtHelper.GetSubject(httpRequest);
                 if (string.IsNullOrWhiteSpace(userId))
                     return Results.Unauthorized();
 
@@ -96,16 +134,15 @@ namespace TheGateKeeper.Server.Endpoints
                     "\uD83D\uDD14 Push notifications are working!");
                 return Results.Ok();
             })
-            .WithName("TestNotification")
-            .RequireAuthorization();
+            .WithName("TestNotification");
 
             // Admin: broadcast a custom push notification to all subscribers
             group.MapPost("broadcast", async (
                 [FromBody] BroadcastRequest request,
-                ClaimsPrincipal user,
+                HttpRequest httpRequest,
                 IWebPushNotificationService pushService) =>
             {
-                if (!user.HasKeycloakRealmRole("Admin"))
+                if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
                     return Results.Forbid();
 
                 if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Body))
@@ -114,8 +151,7 @@ namespace TheGateKeeper.Server.Endpoints
                 await pushService.SendNotificationToAllAsync(request.Title, request.Body);
                 return Results.Ok();
             })
-            .WithName("BroadcastNotification")
-            .RequireAuthorization();
+            .WithName("BroadcastNotification");
 
             return endpoints;
         }

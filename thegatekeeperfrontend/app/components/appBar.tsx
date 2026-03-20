@@ -13,6 +13,8 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import CircularProgress from '@mui/material/CircularProgress';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { domainUrlPrefix } from '@/store/backEndCalls';
@@ -30,7 +32,12 @@ function ResponsiveAppBar() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const auth = useAuth();
     const accessToken = auth.user?.access_token;
-    const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications(accessToken);
+    const { isSubscribed, isLoading: pushLoading, error: pushError, subscribe, unsubscribe } = usePushNotifications(accessToken);
+    const [pushErrorOpen, setPushErrorOpen] = React.useState(false);
+
+    React.useEffect(() => {
+        if (pushError) setPushErrorOpen(true);
+    }, [pushError]);
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -58,6 +65,7 @@ function ResponsiveAppBar() {
 
     const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VoteStandings || resultsPageEnabled)
     return (
+        <>
         <AppBar position="static">
             <Container style={{ maxWidth: '100%' }}>
                 <Toolbar disableGutters>
@@ -175,7 +183,7 @@ function ResponsiveAppBar() {
                     </Box>
                     {/* Notification Bell — visible only when logged in */}
                     {auth.isAuthenticated && (
-                        <Tooltip title={isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications'}>
+                        <Tooltip title={pushError ?? (isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications')}>
                             <span>
                                 <IconButton
                                     size="large"
@@ -236,6 +244,17 @@ function ResponsiveAppBar() {
                 </Toolbar>
             </Container>
         </AppBar>
+        <Snackbar
+            open={pushErrorOpen}
+            autoHideDuration={6000}
+            onClose={() => setPushErrorOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+            <Alert severity="error" onClose={() => setPushErrorOpen(false)}>
+                {pushError}
+            </Alert>
+        </Snackbar>
+        </>
     );
 }
 export default ResponsiveAppBar;

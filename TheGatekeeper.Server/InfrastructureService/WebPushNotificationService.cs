@@ -29,9 +29,9 @@ namespace TheGateKeeper.Server.InfrastructureService
             var database = mongoClient.GetDatabase("gateKeeper");
             _subscriptions = database.GetCollection<PushSubscriptionDaoV1>("pushSubscriptions");
 
-            _vapidPublicKey = SecretsHelper.GetSecret(configuration, "vapid_public_key");
-            _vapidPrivateKey = SecretsHelper.GetSecret(configuration, "vapid_private_key");
-            _vapidSubject = SecretsHelper.GetSecret(configuration, "vapid_subject");
+            _vapidPublicKey = SecretsHelper.GetSecret(configuration, "vapid_public_key").Trim();
+            _vapidPrivateKey = SecretsHelper.GetSecret(configuration, "vapid_private_key").Trim();
+            _vapidSubject = SecretsHelper.GetSecret(configuration, "vapid_subject").Trim();
         }
 
         public string GetVapidPublicKey() => _vapidPublicKey;
