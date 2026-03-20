@@ -67,7 +67,7 @@ export function usePushNotifications(accessToken: string | undefined) {
                 }),
             });
 
-            if (!res.ok) throw new Error('Failed to save subscription on server.');
+            if (!res.ok) throw new Error(`Failed to save subscription (HTTP ${res.status}).`);
             setIsSubscribed(true);
             localStorage.setItem(STORAGE_KEY, 'true');
         };
