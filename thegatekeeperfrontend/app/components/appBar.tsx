@@ -13,6 +13,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import CircularProgress from '@mui/material/CircularProgress';
+import DownloadIcon from '@mui/icons-material/Download';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -34,6 +35,16 @@ function ResponsiveAppBar() {
     const accessToken = auth.user?.access_token;
     const { isSubscribed, isLoading: pushLoading, error: pushError, subscribe, unsubscribe } = usePushNotifications(accessToken);
     const [pushErrorOpen, setPushErrorOpen] = React.useState(false);
+    const [installPrompt, setInstallPrompt] = React.useState<Event & { prompt: () => Promise<void> } | null>(null);
+
+    React.useEffect(() => {
+        const handler = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e as Event & { prompt: () => Promise<void> });
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
 
     React.useEffect(() => {
         if (pushError) setPushErrorOpen(true);
@@ -195,8 +206,8 @@ function ResponsiveAppBar() {
                                     {pushLoading
                                         ? <CircularProgress size={24} color="inherit" />
                                         : isSubscribed
-                                            ? <NotificationsIcon />
-                                            : <NotificationsOffIcon />}
+                                            ? <NotificationsOffIcon />
+                                            : <NotificationsIcon />}
                                 </IconButton>
                             </span>
                         </Tooltip>
@@ -232,7 +243,18 @@ function ResponsiveAppBar() {
                                     onClose={handleClose}
                                 >
                                     {auth.isAuthenticated ? (
-                                        <MenuItem onClick={() => auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin })}>Logout</MenuItem>
+                                        <span>
+                                            {installPrompt && (
+                                                <MenuItem onClick={() => {
+                                                    installPrompt.prompt();
+                                                    setInstallPrompt(null);
+                                                    handleClose();
+                                                }}>
+                                                    <DownloadIcon fontSize="small" sx={{ mr: 1 }} />Install app
+                                                </MenuItem>
+                                            )}
+                                            <MenuItem onClick={() => auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin })}>Logout</MenuItem>
+                                        </span>
                                     ) : (
                                         <MenuItem onClick={() => auth.signinRedirect()}>Login</MenuItem>
                                     )}
