@@ -217,7 +217,9 @@ function ResponsiveAppBar() {
                     )}
                     {/* User Button */}
                     <Box sx={{ flexGrow: 0 }}>
-                        {auth && (
+                        {auth.isLoading ? (
+                            <CircularProgress size={28} color="inherit" sx={{ mx: 1 }} />
+                        ) : (
                             <div>
                                 <IconButton
                                     size="large"
@@ -264,7 +266,6 @@ function ResponsiveAppBar() {
                                 </Menu>
                             </div>
                         )}
-
                     </Box>
                 </Toolbar>
             </Container>

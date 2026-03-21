@@ -27,6 +27,9 @@ function App() {
     response_type: "code",
     automaticSilentRenew: true,
     loadUserInfo: true,
+    onSigninCallback: () => {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    },
   };
 
   useEffect(() => {
