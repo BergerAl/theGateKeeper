@@ -18,6 +18,7 @@ import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
 import { KeycloakUsersTab } from './keycloakUsersTab';
+import { VotingResultsTab } from './userVotingsTab';
 import { DisplayedView } from '../../types';
 import { useAuth } from 'react-oidc-context';
 
@@ -83,7 +84,7 @@ export const TheGateKeeper: React.FC = () => {
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.KeycloakUsers &&
         <KeycloakUsersTab accessToken={accessToken} />}
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.UserVotings &&
-        null /* UserVotings — to be implemented */}
+        <VotingResultsTab accessToken={accessToken} />}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage &&
         <ResultPage />}

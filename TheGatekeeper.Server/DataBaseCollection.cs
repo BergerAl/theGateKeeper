@@ -78,6 +78,18 @@ namespace TheGateKeeper.Server
     }
 
     [BsonIgnoreExtraElements]
+    public class KeycloakUserVoteDaoV1
+    {
+        [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
+        [BsonRepresentation(BsonType.String)]
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+        public double VoteCount { get; set; } = 0;
+        public bool IsBlocked { get; set; } = false;
+        public DateTime VoteBlockedUntil { get; set; } = DateTime.MinValue;
+    }
+
+    [BsonIgnoreExtraElements]
     public class RankTimeLineDaoV1
     {
         public DateTime DateTime { get; set; }

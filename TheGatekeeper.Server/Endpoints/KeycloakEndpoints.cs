@@ -1,5 +1,7 @@
+using MongoDB.Driver;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using TheGateKeeper.Server;
 
 namespace TheGateKeeper.Server.Endpoints
 {
@@ -70,6 +72,61 @@ namespace TheGateKeeper.Server.Endpoints
                 return Results.Ok(users);
             })
             .WithName("GetKeycloakUsers");
+
+            // Admin-only: get vote counts for all Keycloak users
+            group.MapGet("userVotes", async (
+                HttpRequest httpRequest,
+                IMongoClient mongoClient) =>
+            {
+                if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
+                    return Results.Forbid();
+
+                var collection = mongoClient.GetDatabase("gateKeeper")
+                    .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
+                var votes = await collection.Find(_ => true).ToListAsync();
+                var result = votes.Select(v => new { username = v.Username, votes = v.VoteCount });
+                return Results.Ok(result);
+            })
+            .WithName("GetKeycloakUserVotes");
+
+            // Authenticated: vote for a Keycloak user
+            group.MapPost("users/{username}/vote", async (
+                string username,
+                HttpRequest httpRequest,
+                IMongoClient mongoClient) =>
+            {
+                if (JwtHelper.DecodePayload(httpRequest) is null)
+                    return Results.Unauthorized();
+
+                var collection = mongoClient.GetDatabase("gateKeeper")
+                    .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
+
+                var filter = Builders<KeycloakUserVoteDaoV1>.Filter.Eq(d => d.Username, username);
+                var existing = await collection.Find(filter).FirstOrDefaultAsync();
+
+                if (existing == null)
+                {
+                    await collection.InsertOneAsync(new KeycloakUserVoteDaoV1
+                    {
+                        Username = username,
+                        VoteCount = 1,
+                        IsBlocked = true,
+                        VoteBlockedUntil = DateTime.UtcNow.AddSeconds(0.5)
+                    });
+                    return Results.Ok();
+                }
+
+                if (existing.IsBlocked && existing.VoteBlockedUntil > DateTime.UtcNow)
+                    return Results.BadRequest(new { message = $"Voting for {username} is currently blocked." });
+
+                var update = Builders<KeycloakUserVoteDaoV1>.Update
+                    .Inc(d => d.VoteCount, 1)
+                    .Set(d => d.IsBlocked, true)
+                    .Set(d => d.VoteBlockedUntil, DateTime.UtcNow.AddSeconds(0.5));
+                await collection.UpdateOneAsync(filter, update);
+                return Results.Ok();
+            })
+            .WithName("VoteForKeycloakUser");
 
             return endpoints;
         }

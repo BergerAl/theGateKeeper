@@ -119,23 +119,6 @@ namespace TheGateKeeper.Server.Endpoints
             })
             .WithName("Unsubscribe");
 
-            // Send a test notification to the calling user
-            group.MapPost("test", async (
-                HttpRequest httpRequest,
-                IWebPushNotificationService pushService) =>
-            {
-                var userId = JwtHelper.GetSubject(httpRequest);
-                if (string.IsNullOrWhiteSpace(userId))
-                    return Results.Unauthorized();
-
-                await pushService.SendNotificationToUserAsync(
-                    userId,
-                    "The GateKeeper",
-                    "\uD83D\uDD14 Push notifications are working!");
-                return Results.Ok();
-            })
-            .WithName("TestNotification");
-
             // Admin: broadcast a custom push notification to all subscribers
             group.MapPost("broadcast", async (
                 [FromBody] BroadcastRequest request,

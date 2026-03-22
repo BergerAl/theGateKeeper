@@ -273,7 +273,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 {
                     _logger.LogInformation($"Item {swaps[0].Item.name} moved from position {swaps[0].OriginalIndex} to {swaps[0].NewIndex}");
                     await NotifyDiscord(swaps, stoppingToken).ConfigureAwait(false);
-                    await NotifyPush(swaps).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -311,14 +310,6 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 _logger.LogError($"Error during finding the standings table {e}");
                 throw;
             }
-        }
-
-        private async Task NotifyPush(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers)
-        {
-            var names = string.Join(", ", swappedPlayers.Select(s => s.Item.name));
-            await _pushService.SendNotificationToAllAsync(
-                "The GateKeeper — Rankings changed!",
-                $"{names} moved in the standings.");
         }
 
         private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers, CancellationToken stoppingToken)
