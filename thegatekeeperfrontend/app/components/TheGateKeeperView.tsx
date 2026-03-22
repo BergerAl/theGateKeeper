@@ -11,7 +11,7 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { voteForUser } from '@/store/backEndCalls';
-import { setUserNameSelection } from '@/store/features/baseComponentsSlice';
+import { setUserNameSelection, clearWheelTarget } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
@@ -19,6 +19,7 @@ import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
 import { KeycloakUsersTab } from './keycloakUsersTab';
 import { VotingResultsTab } from './userVotingsTab';
+import { SpinWheelModal } from './spinWheelModal';
 import { DisplayedView } from '../../types';
 import { useAuth } from 'react-oidc-context';
 
@@ -30,6 +31,8 @@ export const TheGateKeeper: React.FC = () => {
   const dispatch = useAppDispatch()
   const auth = useAuth();
   const accessToken = auth.user?.access_token;
+  const wheelTarget = useAppSelector(state => state.viewStateSlice.wheelTarget)
+  const currentUsername = auth.user?.profile?.preferred_username as string | undefined
 
   useEffect(() => {
     const enabledTabs = appConfig.enabledTabs ?? [];
@@ -42,6 +45,12 @@ export const TheGateKeeper: React.FC = () => {
   return (
     <>
       <ChartComponent />
+      <SpinWheelModal
+        open={!!wheelTarget && wheelTarget === currentUsername}
+        onClose={() => dispatch(clearWheelTarget())}
+        username={wheelTarget ?? ''}
+        accessToken={accessToken}
+      />
       <ResponsiveAppBar />
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.LeagueStandings &&
         <TableContainer component={Paper} >

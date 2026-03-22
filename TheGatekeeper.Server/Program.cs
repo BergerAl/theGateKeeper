@@ -14,6 +14,7 @@ using TheGateKeeper.Server.ConnectionManager;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
+using TheGateKeeper.Server.WheelService;
 using TheGateKeeper.Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -74,6 +75,7 @@ builder.Services.Configure<HostOptions>(hostOptions =>
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
 builder.Services.AddSingleton<IWebPushNotificationService, WebPushNotificationService>();
+builder.Services.AddSingleton<IWheelService, WheelService>();
 builder.Services.AddHostedService<StartUpService>();
 #if !DEBUG
 builder.Services.AddHostedService<ItemSeedService>();
@@ -127,5 +129,6 @@ app.MapRiotApiEndpoints();
 app.MapAppConfigurationEndpoints();
 app.MapNotificationEndpoints();
 app.MapKeycloakEndpoints();
+app.MapWheelEndpoints();
 
 app.Run();

@@ -4,7 +4,7 @@ import * as signalR from '@microsoft/signalr';
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CombinedContext, User } from "@/context/contextProvider";
-import { setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked } from "@/store/features/baseComponentsSlice";
+import { setIsMobileDevice, setUsersOnline, updateAppConfig, updateUsersIfBlocked, setWheelTarget } from "@/store/features/baseComponentsSlice";
 import { ThemeProvider } from "@mui/material";
 import { ControlPanel } from "./components/controlPanel";
 import { TheGateKeeper } from "./components/TheGateKeeperView";
@@ -45,6 +45,9 @@ function App() {
     });
     newConnection.on("UsersOnline", (usersOnline: GateKeeperAppInfoDtoV1) => {
       dispatch(setUsersOnline(usersOnline))
+    });
+    newConnection.on("OpenWheelFor", (username: string) => {
+      dispatch(setWheelTarget(username))
     });
 
     newConnection.start().catch(err => console.error('Error starting connection:', err));

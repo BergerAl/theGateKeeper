@@ -7,6 +7,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CasinoIcon from '@mui/icons-material/Casino';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab, Button, TextField, FormGroup, FormControlLabel, Checkbox, Typography, Switch } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -31,6 +38,12 @@ const AdminControl = () => {
     const [broadcastBody, setBroadcastBody] = React.useState('');
     const [broadcasting, setBroadcasting] = React.useState(false);
     const [resettingVotes, setResettingVotes] = React.useState(false);
+    const [wheelOptions, setWheelOptions] = React.useState<string[]>([]);
+    const [newWheelOption, setNewWheelOption] = React.useState('');
+    const [savingWheelOptions, setSavingWheelOptions] = React.useState(false);
+    const [keycloakUsers, setKeycloakUsers] = React.useState<{ username: string; firstName?: string; lastName?: string }[]>([]);
+    const [selectedWheelUser, setSelectedWheelUser] = React.useState('');
+    const [openingWheel, setOpeningWheel] = React.useState(false);
 
     // Check for Admin role in access token
     // Option A: uses a custom realm role named 'Admin' assigned to the user in Keycloak
@@ -57,6 +70,51 @@ const AdminControl = () => {
         dispatch(fetchCurrentVoteStandings())
         // eslint-disable-next-line
     }, []);
+
+    useEffect(() => {
+        if (!open) return;
+        fetch(`${domainUrlPrefix()}/api/wheel/options`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then((data: { options: string[] }) => setWheelOptions(data.options ?? []))
+            .catch(console.error);
+        fetch(`${domainUrlPrefix()}/api/keycloak/users`, {
+            headers: { Authorization: `Bearer ${auth.user?.access_token}` },
+        })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then((data: { username: string; firstName?: string; lastName?: string }[]) => {
+                setKeycloakUsers(data);
+                if (data.length > 0) setSelectedWheelUser(prev => prev || data[0].username);
+            })
+            .catch(console.error);
+        // eslint-disable-next-line
+    }, [open]);
+
+    const handleAddWheelOption = () => {
+        const trimmed = newWheelOption.trim();
+        if (!trimmed) return;
+        setWheelOptions(prev => [...prev, trimmed]);
+        setNewWheelOption('');
+    };
+
+    const handleDeleteWheelOption = (index: number) => {
+        setWheelOptions(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSaveWheelOptions = async () => {
+        setSavingWheelOptions(true);
+        try {
+            await fetch(`${domainUrlPrefix()}/api/wheel/options`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+                body: JSON.stringify({ options: wheelOptions }),
+            });
+        } finally {
+            setSavingWheelOptions(false);
+        }
+    };
     const options: SelectOption[] = (
         Object.keys(DisplayedView)
             .filter(key => isNaN(Number(key)))
@@ -267,6 +325,84 @@ const AdminControl = () => {
                     sx={{ mt: 1 }}
                 >
                     {resettingVotes ? 'Resetting...' : 'Reset Keycloak votes'}
+                </Button>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>Wheel Options</Typography>
+                <List dense disablePadding>
+                    {wheelOptions.map((opt, i) => (
+                        <ListItem
+                            key={i}
+                            disableGutters
+                            secondaryAction={
+                                <IconButton edge="end" size="small" onClick={() => handleDeleteWheelOption(i)}>
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            }
+                        >
+                            <ListItemText primary={opt} />
+                        </ListItem>
+                    ))}
+                </List>
+                <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                    <TextField
+                        label="New option"
+                        size="small"
+                        value={newWheelOption}
+                        onChange={e => setNewWheelOption(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddWheelOption(); }}
+                        sx={{ flex: 1 }}
+                    />
+                    <Button variant="outlined" size="small" onClick={handleAddWheelOption}>Add</Button>
+                </Box>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    disabled={savingWheelOptions}
+                    onClick={handleSaveWheelOptions}
+                    sx={{ mt: 1 }}
+                    fullWidth
+                >
+                    {savingWheelOptions ? 'Saving…' : 'Save wheel options'}
+                </Button>
+                <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                    <InputLabel>Spin for user</InputLabel>
+                    <Select
+                        value={selectedWheelUser}
+                        label="Spin for user"
+                        onChange={(e: SelectChangeEvent) => setSelectedWheelUser(e.target.value)}
+                    >
+                        {keycloakUsers.map(u => (
+                            <MenuItem key={u.username} value={u.username}>
+                                {u.firstName && u.lastName
+                                    ? `${u.firstName} ${u.lastName} (${u.username})`
+                                    : u.username}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <Button
+                    variant="contained"
+                    startIcon={<CasinoIcon />}
+                    disabled={openingWheel || !selectedWheelUser}
+                    onClick={async () => {
+                        setOpeningWheel(true);
+                        try {
+                            await fetch(`${domainUrlPrefix()}/api/wheel/open`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${auth.user?.access_token}`,
+                                },
+                                body: JSON.stringify({ selectedUser: selectedWheelUser }),
+                            });
+                        } finally {
+                            setOpeningWheel(false);
+                        }
+                    }}
+                    sx={{ mt: 1 }}
+                    fullWidth
+                >
+                    {openingWheel ? 'Opening\u2026' : 'Open Wheel'}
                 </Button>
                 <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <TextField

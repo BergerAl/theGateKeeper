@@ -33,6 +33,7 @@ export interface ViewState {
     gateKeeperInfo: GateKeeperInformationDtoV1
     isDeviceMobile: boolean
     appInfo: GateKeeperAppInfoDtoV1
+    wheelTarget: string | null
 }
 
 export const initialState: ViewState = {
@@ -47,7 +48,8 @@ export const initialState: ViewState = {
     appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, votingEndsAt: '', enabledTabs: [] },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false,
-    appInfo: { usersOnline: 0 }
+    appInfo: { usersOnline: 0 },
+    wheelTarget: null
 };
 
 
@@ -82,6 +84,12 @@ export const viewStateSlice = createSlice({
         setUserNameSelection: (state, action: PayloadAction<string>) => {
             state.chartView.userName = action.payload;
             state.chartView.visible = true;
+        },
+        setWheelTarget: (state, action: PayloadAction<string>) => {
+            state.wheelTarget = action.payload;
+        },
+        clearWheelTarget: (state) => {
+            state.wheelTarget = null;
         }
     },
     extraReducers(builder) {
@@ -132,7 +140,9 @@ export const {
     setIsMobileDevice,
     setUsersOnline,
     closeChartView,
-    setUserNameSelection
+    setUserNameSelection,
+    setWheelTarget,
+    clearWheelTarget
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

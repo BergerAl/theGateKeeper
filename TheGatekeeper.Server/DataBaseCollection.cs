@@ -148,4 +148,13 @@ namespace TheGateKeeper.Server
         public string Auth { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
+
+    [BsonIgnoreExtraElements]
+    public class WheelConfigDaoV1
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Id { get; set; }
+        public List<string> Options { get; set; } = [];
+    }
 }
