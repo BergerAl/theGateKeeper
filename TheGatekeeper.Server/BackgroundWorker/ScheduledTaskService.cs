@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
+using TheGateKeeper.Server.InfrastructureService;
 using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
-    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper) : BackgroundService
+    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper, IWebPushNotificationService pushService) : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
@@ -13,6 +14,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly ILogger<ScheduledTaskService> _logger = logger;
         private readonly IHubContext<EventHub> _eventHub = eventHub;
         private readonly IMapper _mapper = mapper;
+        private readonly IWebPushNotificationService _pushService = pushService;
         private AppConfigurationDaoV1? _appConfig;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -68,6 +70,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                             .Set(doc => doc.VotingDisabled, true)
                             .Set(doc => doc.VotingEndsAt, (DateTime?)null);
                         await _appConfiguration.UpdateOneAsync(emptyFilter2, timerUpdate);
+                        await _pushService.SendNotificationToAllAsync("The GateKeeper", "Voting has ended.");
                         appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
                     }
 
