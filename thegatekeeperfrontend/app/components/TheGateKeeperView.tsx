@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { voteForUser } from '@/store/backEndCalls';
 import { setUserNameSelection } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
-import { NavigationTab } from '@/store/features/userSlice';
+import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
@@ -30,6 +30,15 @@ export const TheGateKeeper: React.FC = () => {
   const dispatch = useAppDispatch()
   const auth = useAuth();
   const accessToken = auth.user?.access_token;
+
+  useEffect(() => {
+    const enabledTabs = appConfig.enabledTabs ?? [];
+    if (enabledTabs.length > 0 && !enabledTabs.includes(userNavigation)) {
+      const firstEnabled = Object.values(NavigationTab).find(tab => enabledTabs.includes(tab));
+      if (firstEnabled) dispatch(setUserNavigation(firstEnabled));
+    }
+  }, [appConfig.enabledTabs]);
+
   return (
     <>
       <ChartComponent />
