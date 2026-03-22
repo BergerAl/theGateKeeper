@@ -193,7 +193,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError($"Error during reading of account information: {errorResponse?.Status.message}");
                     return new AccountDtoV1();
                 }
-                return await response.Content.ReadFromJsonAsync<AccountDtoV1>().ConfigureAwait(false);
+                return await response.Content.ReadFromJsonAsync<AccountDtoV1>().ConfigureAwait(false) ?? new AccountDtoV1();
             }
             catch (Exception e)
             {
@@ -215,7 +215,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError($"Error during reading of summoner info with following error: {errorResponse?.Status.message}");
                     return new SummonerDtoV1();
                 }
-                return await response.Content.ReadFromJsonAsync<SummonerDtoV1>().ConfigureAwait(false);
+                return await response.Content.ReadFromJsonAsync<SummonerDtoV1>().ConfigureAwait(false) ?? new SummonerDtoV1();
             }
             catch (Exception e)
             {
@@ -314,9 +314,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
         private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers, CancellationToken stoppingToken)
         {
-#if DEBUG
-            return;
-#endif
+#if !DEBUG
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)
             {
@@ -332,13 +330,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var contentData = new StringContent(json, Encoding.UTF8, "application/json");
 
             await _httpClient.PostAsync(_webhookUrl, contentData, stoppingToken);
+#else
+            await Task.CompletedTask;
+#endif
         }
 
         private async Task NotifyDiscordGateKeeperPlaying(CancellationToken stoppingToken)
         {
-#if DEBUG
-            return;
-#endif
+#if !DEBUG
             try
             {
                 var emptyFilter = Builders<GateKeeperInformationDaoV1>.Filter.Empty;
@@ -377,7 +376,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 _logger.LogError($"Error during sending of discord message. Exception {ex}");
                 throw;
             }
-
+#else
+            await Task.CompletedTask;
+#endif
         }
 
         private static int GetCombinedPoints(string tier, string rank, int leaguePoints)
