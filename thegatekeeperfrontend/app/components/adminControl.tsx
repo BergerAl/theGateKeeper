@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
 import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
 import { useAuth } from 'react-oidc-context';
+import { NavigationTab } from '@/store/features/userSlice';
 interface SelectOption {
     value: string
     label: string
@@ -87,7 +88,7 @@ const AdminControl = () => {
         if (!enabled) setTimerMinutes(0);
     };
 
-    const configurableTabs = ['LeagueStandings', 'Results', 'Users', 'UserVotings'];
+    const configurableTabs = Object.values(NavigationTab);
 
     const handleTabToggle = (tab: string) => {
         setAppConfig(currentConfig => {

@@ -7,7 +7,7 @@ export enum NavigationTab {
   LeagueStandings = "LeagueStandings",
   Results = "Results",
   KeycloakUsers = "Users",
-  UserVotings = "UserVotings"
+  UserVotings = "ResultsVoting"
 }
 
 export interface UserSlice {
