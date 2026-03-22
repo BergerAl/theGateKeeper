@@ -37,6 +37,7 @@ namespace TheGateKeeper.Server.Endpoints
             .WithName("UpdateWheelOptions");
 
             // Authenticated: record a spin result and notify all subscribers
+            // Only the user that was selected via the 'open' endpoint may submit a result.
             group.MapPost("spin", async (
                 HttpRequest httpRequest,
                 WheelSpinRequest body,
@@ -45,9 +46,16 @@ namespace TheGateKeeper.Server.Endpoints
                 if (JwtHelper.DecodePayload(httpRequest) is null)
                     return Results.Unauthorized();
 
+                var pendingUser = wheelService.GetPendingSpinUser();
+                var callerUsername = JwtHelper.GetPreferredUsername(httpRequest);
+
+                if (pendingUser is null || !string.Equals(pendingUser, callerUsername, StringComparison.OrdinalIgnoreCase))
+                    return Results.Forbid();
+
                 if (string.IsNullOrWhiteSpace(body.SelectedUser) || string.IsNullOrWhiteSpace(body.Result))
                     return Results.BadRequest(new { message = "SelectedUser and Result are required." });
 
+                wheelService.ClearPendingSpinUser();
                 await wheelService.NotifySpinResultAsync(body.SelectedUser, body.Result);
                 return Results.Ok();
             })
@@ -57,7 +65,8 @@ namespace TheGateKeeper.Server.Endpoints
             group.MapPost("open", async (
                 HttpRequest httpRequest,
                 WheelOpenRequest body,
-                IHubContext<EventHub> hub) =>
+                IHubContext<EventHub> hub,
+                IWheelService wheelService) =>
             {
                 if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
                     return Results.Forbid();
@@ -65,6 +74,7 @@ namespace TheGateKeeper.Server.Endpoints
                 if (string.IsNullOrWhiteSpace(body.SelectedUser))
                     return Results.BadRequest(new { message = "SelectedUser is required." });
 
+                wheelService.SetPendingSpinUser(body.SelectedUser);
                 await hub.Clients.All.SendAsync("OpenWheelFor", body.SelectedUser);
                 return Results.Ok();
             })

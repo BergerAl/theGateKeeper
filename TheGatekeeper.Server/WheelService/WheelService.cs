@@ -8,6 +8,9 @@ namespace TheGateKeeper.Server.WheelService
         Task<List<string>> GetOptionsAsync();
         Task SaveOptionsAsync(List<string> options);
         Task NotifySpinResultAsync(string selectedUser, string result);
+        void SetPendingSpinUser(string username);
+        string? GetPendingSpinUser();
+        void ClearPendingSpinUser();
     }
 
     public class WheelService : IWheelService
@@ -15,6 +18,7 @@ namespace TheGateKeeper.Server.WheelService
         private readonly IMongoCollection<WheelConfigDaoV1> _collection;
         private readonly IWebPushNotificationService _pushService;
         private readonly ILogger<WheelService> _logger;
+        private string? _pendingSpinUser;
 
         public WheelService(
             IMongoClient mongoClient,
@@ -46,6 +50,10 @@ namespace TheGateKeeper.Server.WheelService
                 await _collection.UpdateOneAsync(d => d.Id == existing.Id, update);
             }
         }
+
+        public void SetPendingSpinUser(string username) => _pendingSpinUser = username;
+        public string? GetPendingSpinUser() => _pendingSpinUser;
+        public void ClearPendingSpinUser() => _pendingSpinUser = null;
 
         public async Task NotifySpinResultAsync(string selectedUser, string result)
         {

@@ -43,6 +43,13 @@ namespace TheGateKeeper.Server.Endpoints
             return payload.Value.TryGetProperty("sub", out var sub) ? sub.GetString() : null;
         }
 
+        internal static string? GetPreferredUsername(HttpRequest request)
+        {
+            var payload = DecodePayload(request);
+            if (payload is null) return null;
+            return payload.Value.TryGetProperty("preferred_username", out var un) ? un.GetString() : null;
+        }
+
         internal static bool HasRealmRole(HttpRequest request, string role)
         {
             var payload = DecodePayload(request);
