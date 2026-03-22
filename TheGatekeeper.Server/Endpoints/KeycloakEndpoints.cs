@@ -14,14 +14,14 @@ namespace TheGateKeeper.Server.Endpoints
             var group = endpoints.MapGroup("api/keycloak")
                 .WithTags("Keycloak");
 
-            // Admin-only: list all registered users from Keycloak
+            // Authenticated: list all registered users from Keycloak
             group.MapGet("users", async (
                 HttpRequest httpRequest,
                 IConfiguration configuration,
                 IHttpClientFactory httpClientFactory) =>
             {
-                if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
-                    return Results.Forbid();
+                if (JwtHelper.DecodePayload(httpRequest) is null)
+                    return Results.Unauthorized();
 
                 // Get an admin token using client credentials
                 // Use internal Docker network hostname for container-to-container calls
@@ -73,13 +73,13 @@ namespace TheGateKeeper.Server.Endpoints
             })
             .WithName("GetKeycloakUsers");
 
-            // Admin-only: get vote counts for all Keycloak users
+            // Authenticated: get vote counts for all Keycloak users
             group.MapGet("userVotes", async (
                 HttpRequest httpRequest,
                 IMongoClient mongoClient) =>
             {
-                if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
-                    return Results.Forbid();
+                if (JwtHelper.DecodePayload(httpRequest) is null)
+                    return Results.Unauthorized();
 
                 var collection = mongoClient.GetDatabase("gateKeeper")
                     .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
