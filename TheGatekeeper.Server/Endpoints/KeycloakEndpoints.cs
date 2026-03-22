@@ -24,7 +24,7 @@ namespace TheGateKeeper.Server.Endpoints
                 // Get an admin token using client credentials
                 // Use internal Docker network hostname for container-to-container calls
                 var keycloakUrl = configuration["Keycloak:auth-server-url"]?.TrimEnd('/')
-                    ?? "http://keycloak:8080";
+                    ?? "http://keycloak:8892";
                 var realm = configuration["Keycloak:realm"] ?? "thegatekeeper";
                 var adminUser = SecretsHelper.GetSecret(configuration, "keycloak_admin");
                 var adminPassword = SecretsHelper.GetSecret(configuration, "keycloak_admin_password");
