@@ -128,6 +128,24 @@ namespace TheGateKeeper.Server.Endpoints
             })
             .WithName("VoteForKeycloakUser");
 
+            // Admin-only: reset all Keycloak user votes to 0
+            group.MapPost("userVotes/reset", async (
+                HttpRequest httpRequest,
+                IMongoClient mongoClient) =>
+            {
+                if (!JwtHelper.HasRealmRole(httpRequest, "Admin"))
+                    return Results.Forbid();
+
+                var collection = mongoClient.GetDatabase("gateKeeper")
+                    .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
+                var update = Builders<KeycloakUserVoteDaoV1>.Update
+                    .Set(d => d.VoteCount, 0)
+                    .Set(d => d.IsBlocked, false);
+                await collection.UpdateManyAsync(_ => true, update);
+                return Results.Ok();
+            })
+            .WithName("ResetKeycloakUserVotes");
+
             return endpoints;
         }
     }

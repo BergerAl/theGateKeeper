@@ -14,6 +14,7 @@ import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { domainUrlPrefix } from '@/store/backEndCalls';
+import { useAppSelector } from '@/store/hooks';
 
 interface KeycloakUser {
     username: string;
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export const KeycloakUsersTab: React.FC<Props> = ({ accessToken }) => {
+    const votingDisabled = useAppSelector(state => state.viewStateSlice.appConfiguration.votingDisabled);
     const [users, setUsers] = useState<KeycloakUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export const KeycloakUsersTab: React.FC<Props> = ({ accessToken }) => {
                                         variant="contained"
                                         size="small"
                                         onClick={() => handleVote(user.username)}
-                                        disabled={!accessToken || votingFor === user.username}
+                                        disabled={!accessToken || votingDisabled || votingFor === user.username}
                                     >
                                         {votingFor === user.username ? <CircularProgress size={18} /> : '👍 Vote'}
                                     </Button>

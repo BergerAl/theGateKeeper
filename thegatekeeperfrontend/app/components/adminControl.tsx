@@ -11,7 +11,7 @@ import { Select, MenuItem, InputLabel, FormControl, Box, SelectChangeEvent, Fab,
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { AppConfigurationDtoV1, DisplayedView } from '../../types';
-import { fetchCurrentVoteStandings, updateConfiguration } from '@/store/backEndCalls';
+import { fetchCurrentVoteStandings, updateConfiguration, domainUrlPrefix } from '@/store/backEndCalls';
 import { useAuth } from 'react-oidc-context';
 import { NavigationTab } from '@/store/features/userSlice';
 interface SelectOption {
@@ -30,6 +30,7 @@ const AdminControl = () => {
     const [broadcastTitle, setBroadcastTitle] = React.useState('The GateKeeper');
     const [broadcastBody, setBroadcastBody] = React.useState('');
     const [broadcasting, setBroadcasting] = React.useState(false);
+    const [resettingVotes, setResettingVotes] = React.useState(false);
 
     // Check for Admin role in access token
     // Option A: uses a custom realm role named 'Admin' assigned to the user in Keycloak
@@ -89,6 +90,18 @@ const AdminControl = () => {
     };
 
     const configurableTabs = Object.values(NavigationTab);
+
+    const handleResetKeycloakVotes = async () => {
+        setResettingVotes(true);
+        try {
+            await fetch(`${domainUrlPrefix()}/api/keycloak/userVotes/reset`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${auth.user?.access_token}` },
+            });
+        } finally {
+            setResettingVotes(false);
+        }
+    };
 
     const handleTabToggle = (tab: string) => {
         setAppConfig(currentConfig => {
@@ -246,6 +259,15 @@ const AdminControl = () => {
                     }}
                     variant="contained"
                 >{"Save config"}</Button>
+                <Button
+                    variant="contained"
+                    color="error"
+                    disabled={resettingVotes}
+                    onPointerDown={handleResetKeycloakVotes}
+                    sx={{ mt: 1 }}
+                >
+                    {resettingVotes ? 'Resetting...' : 'Reset Keycloak votes'}
+                </Button>
                 <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <TextField
                         label="Notification title"
