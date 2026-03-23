@@ -21,10 +21,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddDockerSecrets();
 
+#if DEBUG
 builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false);
 
-#if DEBUG
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", 
     optional: true);
 #endif

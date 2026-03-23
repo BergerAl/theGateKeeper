@@ -209,8 +209,8 @@ function ResponsiveAppBar() {
                                     {pushLoading
                                         ? <CircularProgress size={24} color="inherit" />
                                         : isSubscribed
-                                            ? <NotificationsOffIcon />
-                                            : <NotificationsIcon />}
+                                            ? <NotificationsIcon />
+                                            : <NotificationsOffIcon />}
                                 </IconButton>
                             </span>
                         </Tooltip>

@@ -78,6 +78,12 @@ export const KeycloakUsersTab: React.FC<Props> = ({ accessToken }) => {
         }
     };
 
+    if (!accessToken) return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Typography color="primary">Please login to join the game</Typography>
+        </Box>
+    );
+
     if (loading) return (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <CircularProgress />

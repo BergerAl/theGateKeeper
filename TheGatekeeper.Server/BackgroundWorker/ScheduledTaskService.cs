@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
+using System.Text.Json;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGatekeeper.Contracts;
 
@@ -15,7 +16,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly IHubContext<EventHub> _eventHub = eventHub;
         private readonly IMapper _mapper = mapper;
         private readonly IWebPushNotificationService _pushService = pushService;
-        private AppConfigurationDaoV1? _appConfig;
+        private string? _appConfigJson;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -74,16 +75,21 @@ namespace TheGateKeeper.Server.BackgroundWorker
                         appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
                     }
 
-                    if (appConfig != _appConfig)
+                    if (appConfig != null)
                     {
-                        _appConfig = appConfig;
-                        try
+                        var dto = _mapper.Map<AppConfigurationDtoV1>(appConfig);
+                        var configJson = JsonSerializer.Serialize(dto);
+                        if (configJson != _appConfigJson)
                         {
-                            await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", _mapper.Map<AppConfigurationDtoV1>(appConfig));
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
+                            _appConfigJson = configJson;
+                            try
+                            {
+                                await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", dto);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
+                            }
                         }
                     }
                     _logger.LogInformation($"ScheduledTaskService finished process successfully");
