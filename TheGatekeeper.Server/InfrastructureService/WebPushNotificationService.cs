@@ -1,4 +1,6 @@
 using MongoDB.Driver;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using WebPush;
 
 namespace TheGateKeeper.Server.InfrastructureService
@@ -16,6 +18,8 @@ namespace TheGateKeeper.Server.InfrastructureService
     {
         private readonly IMongoCollection<PushSubscriptionDaoV1> _subscriptions;
         private readonly ILogger<WebPushNotificationService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
         private readonly string _vapidPublicKey;
         private readonly string _vapidPrivateKey;
         private readonly string _vapidSubject;
@@ -23,9 +27,12 @@ namespace TheGateKeeper.Server.InfrastructureService
         public WebPushNotificationService(
             IMongoClient mongoClient,
             ILogger<WebPushNotificationService> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
+            _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
             var database = mongoClient.GetDatabase("gateKeeper");
             _subscriptions = database.GetCollection<PushSubscriptionDaoV1>("pushSubscriptions");
 
@@ -60,9 +67,68 @@ namespace TheGateKeeper.Server.InfrastructureService
 
         public async Task SendNotificationToAllAsync(string title, string body, string? icon = null)
         {
+            var enabledUserIds = await GetEnabledKeycloakUserIdsAsync();
             var allSubs = await _subscriptions.Find(_ => true).ToListAsync();
-            var tasks = allSubs.Select(sub => SendToSubscriptionAsync(sub, title, body, icon));
+            var filteredSubs = enabledUserIds is not null
+                ? allSubs.Where(s => enabledUserIds.Contains(s.UserId)).ToList()
+                : allSubs;
+            var tasks = filteredSubs.Select(sub => SendToSubscriptionAsync(sub, title, body, icon));
             await Task.WhenAll(tasks);
+        }
+
+        private async Task<HashSet<string>?> GetEnabledKeycloakUserIdsAsync()
+        {
+            try
+            {
+                var keycloakUrl = _configuration["Keycloak:auth-server-url"]?.TrimEnd('/') ?? "http://keycloak:8080";
+                var realm = _configuration["Keycloak:realm"] ?? "thegatekeeper";
+                var adminUser = SecretsHelper.GetSecret(_configuration, "keycloak_admin");
+                var adminPassword = SecretsHelper.GetSecret(_configuration, "keycloak_admin_password");
+
+                var client = _httpClientFactory.CreateClient();
+
+                var tokenResponse = await client.PostAsync(
+                    $"{keycloakUrl}/realms/master/protocol/openid-connect/token",
+                    new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        ["grant_type"] = "password",
+                        ["client_id"] = "admin-cli",
+                        ["username"] = adminUser,
+                        ["password"] = adminPassword,
+                    }));
+
+                if (!tokenResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Could not authenticate with Keycloak admin — sending to all subscribers.");
+                    return null;
+                }
+
+                var tokenDoc = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync());
+                var accessToken = tokenDoc.RootElement.GetProperty("access_token").GetString();
+
+                var usersRequest = new HttpRequestMessage(HttpMethod.Get,
+                    $"{keycloakUrl}/admin/realms/{realm}/users?max=500");
+                usersRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                var usersResponse = await client.SendAsync(usersRequest);
+                if (!usersResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Could not fetch users from Keycloak — sending to all subscribers.");
+                    return null;
+                }
+
+                var usersDoc = JsonDocument.Parse(await usersResponse.Content.ReadAsStringAsync());
+                return usersDoc.RootElement.EnumerateArray()
+                    .Where(u => u.TryGetProperty("enabled", out var enabled) && enabled.GetBoolean())
+                    .Select(u => u.TryGetProperty("id", out var id) ? id.GetString() : null)
+                    .Where(id => id is not null)
+                    .ToHashSet()!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch enabled Keycloak users — sending to all subscribers.");
+                return null;
+            }
         }
 
         public async Task SendNotificationToUserAsync(string userId, string title, string body, string? icon = null)
