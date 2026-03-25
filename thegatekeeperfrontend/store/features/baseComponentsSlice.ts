@@ -45,7 +45,7 @@ export const initialState: ViewState = {
     },
     frontEndInfo: [],
     voteStandings: [],
-    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, votingEndsAt: '', enabledTabs: [] },
+    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, votingEndsAt: '', enabledTabs: [], voteBlockCooldownSeconds: 0.5 },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false,
     appInfo: { usersOnline: 0 },
@@ -116,7 +116,7 @@ export const viewStateSlice = createSlice({
             state.appConfiguration = action.payload;
         });
         builder.addCase(fetchConfiguration.rejected, (state, action) => {
-            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, votingEndsAt: '', enabledTabs: [] };
+            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, votingEndsAt: '', enabledTabs: [], voteBlockCooldownSeconds: 0.5 };
         });
         builder.addCase(updateConfiguration.fulfilled, (state, action) => {
             state.appConfiguration = action.meta.arg.appConfig;

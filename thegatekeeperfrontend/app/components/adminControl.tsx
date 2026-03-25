@@ -255,6 +255,16 @@ const AdminControl = () => {
                                         <MenuItem value={240}>4 hours</MenuItem>
                                     </Select>
                                 </FormControl>
+                                <TextField
+                                    label="Vote cooldown (seconds)"
+                                    type="number"
+                                    size="small"
+                                    fullWidth
+                                    sx={{ mt: 1 }}
+                                    slotProps={{ htmlInput: { min: 0, step: 0.5 } }}
+                                    value={appConfig.voteBlockCooldownSeconds ?? 0.5}
+                                    onChange={e => setAppConfig(c => ({ ...c, voteBlockCooldownSeconds: Number(e.target.value) }))}
+                                />
                                 {actualConfig.votingEndsAt && (
                                     <Typography variant="caption" color="success.main" sx={{ mt: 0.5, display: 'block' }}>
                                         Ends at: {new Date(actualConfig.votingEndsAt).toLocaleTimeString()}

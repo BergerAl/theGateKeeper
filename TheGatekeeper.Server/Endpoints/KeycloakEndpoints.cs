@@ -2,6 +2,7 @@ using MongoDB.Driver;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using TheGateKeeper.Server;
+using TheGateKeeper.Server.AppControl;
 
 namespace TheGateKeeper.Server.Endpoints
 {
@@ -95,10 +96,14 @@ namespace TheGateKeeper.Server.Endpoints
             group.MapPost("users/{username}/vote", async (
                 string username,
                 HttpRequest httpRequest,
-                IMongoClient mongoClient) =>
+                IMongoClient mongoClient,
+                IAppControl appControl) =>
             {
                 if (JwtHelper.DecodePayload(httpRequest) is null)
                     return Results.Unauthorized();
+
+                var config = await appControl.GetConfigurationAsync();
+                var cooldownSeconds = config?.VoteBlockCooldownSeconds ?? 0.5;
 
                 var collection = mongoClient.GetDatabase("gateKeeper")
                     .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
@@ -113,7 +118,7 @@ namespace TheGateKeeper.Server.Endpoints
                         Username = username,
                         VoteCount = 1,
                         IsBlocked = true,
-                        VoteBlockedUntil = DateTime.UtcNow.AddSeconds(0.5)
+                        VoteBlockedUntil = DateTime.UtcNow.AddSeconds(cooldownSeconds)
                     });
                     return Results.Ok();
                 }
@@ -124,7 +129,7 @@ namespace TheGateKeeper.Server.Endpoints
                 var update = Builders<KeycloakUserVoteDaoV1>.Update
                     .Inc(d => d.VoteCount, 1)
                     .Set(d => d.IsBlocked, true)
-                    .Set(d => d.VoteBlockedUntil, DateTime.UtcNow.AddSeconds(0.5));
+                    .Set(d => d.VoteBlockedUntil, DateTime.UtcNow.AddSeconds(cooldownSeconds));
                 await collection.UpdateOneAsync(filter, update);
                 return Results.Ok();
             })

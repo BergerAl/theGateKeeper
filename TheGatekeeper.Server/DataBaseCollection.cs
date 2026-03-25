@@ -51,6 +51,7 @@ namespace TheGateKeeper.Server
         public DisplayedView DisplayedView { get; set; }
         public bool VotingDisabled { get; set; }
         public DateTime? VotingEndsAt { get; set; }
+        public double VoteBlockCooldownSeconds { get; set; } = 0.5;
         public List<string> EnabledTabs { get; set; } = ["LeagueStandings", "Results", "Users", "UserVotings"];
     }
 
