@@ -87,7 +87,7 @@ namespace TheGateKeeper.Server.Endpoints
                 var collection = mongoClient.GetDatabase("gateKeeper")
                     .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
                 var votes = await collection.Find(_ => true).ToListAsync();
-                var result = votes.Select(v => new { username = v.Username, votes = v.VoteCount });
+                var result = votes.Select(v => new { username = v.Username, votes = v.VoteCount, votesCast = v.VotesCast });
                 return Results.Ok(result);
             })
             .WithName("GetKeycloakUserVotes");
@@ -120,17 +120,29 @@ namespace TheGateKeeper.Server.Endpoints
                         IsBlocked = true,
                         VoteBlockedUntil = DateTime.UtcNow.AddSeconds(cooldownSeconds)
                     });
-                    return Results.Ok();
+                }
+                else
+                {
+                    if (existing.IsBlocked && existing.VoteBlockedUntil > DateTime.UtcNow)
+                        return Results.BadRequest(new { message = $"Voting for {username} is currently blocked." });
+
+                    var update = Builders<KeycloakUserVoteDaoV1>.Update
+                        .Inc(d => d.VoteCount, 1)
+                        .Set(d => d.IsBlocked, true)
+                        .Set(d => d.VoteBlockedUntil, DateTime.UtcNow.AddSeconds(cooldownSeconds));
+                    await collection.UpdateOneAsync(filter, update);
                 }
 
-                if (existing.IsBlocked && existing.VoteBlockedUntil > DateTime.UtcNow)
-                    return Results.BadRequest(new { message = $"Voting for {username} is currently blocked." });
+                var voterUsername = JwtHelper.GetPreferredUsername(httpRequest);
+                if (!string.IsNullOrEmpty(voterUsername))
+                {
+                    var voterFilter = Builders<KeycloakUserVoteDaoV1>.Filter.Eq(d => d.Username, voterUsername);
+                    var voterUpdate = Builders<KeycloakUserVoteDaoV1>.Update
+                        .Inc(d => d.VotesCast, 1)
+                        .SetOnInsert(d => d.Username, voterUsername);
+                    await collection.UpdateOneAsync(voterFilter, voterUpdate, new UpdateOptions { IsUpsert = true });
+                }
 
-                var update = Builders<KeycloakUserVoteDaoV1>.Update
-                    .Inc(d => d.VoteCount, 1)
-                    .Set(d => d.IsBlocked, true)
-                    .Set(d => d.VoteBlockedUntil, DateTime.UtcNow.AddSeconds(cooldownSeconds));
-                await collection.UpdateOneAsync(filter, update);
                 return Results.Ok();
             })
             .WithName("VoteForKeycloakUser");
@@ -147,6 +159,7 @@ namespace TheGateKeeper.Server.Endpoints
                     .GetCollection<KeycloakUserVoteDaoV1>("keycloakUserVotes");
                 var update = Builders<KeycloakUserVoteDaoV1>.Update
                     .Set(d => d.VoteCount, 0)
+                    .Set(d => d.VotesCast, 0)
                     .Set(d => d.IsBlocked, false);
                 await collection.UpdateManyAsync(_ => true, update);
                 return Results.Ok();

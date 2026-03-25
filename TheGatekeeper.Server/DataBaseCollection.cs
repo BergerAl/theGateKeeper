@@ -86,6 +86,7 @@ namespace TheGateKeeper.Server
         public string Id { get; set; } = "";
         public string Username { get; set; } = "";
         public double VoteCount { get; set; } = 0;
+        public double VotesCast { get; set; } = 0;
         public bool IsBlocked { get; set; } = false;
         public DateTime VoteBlockedUntil { get; set; } = DateTime.MinValue;
     }

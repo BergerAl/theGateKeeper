@@ -15,6 +15,7 @@ import { domainUrlPrefix } from '@/store/backEndCalls';
 interface VotingResult {
     username: string;
     votes: number;
+    votesCast: number;
 }
 
 interface Props {
@@ -61,6 +62,7 @@ export const VotingResultsTab: React.FC<Props> = ({ accessToken }) => {
                         <TableCell>#</TableCell>
                         <TableCell>Username</TableCell>
                         <TableCell align="center">Votes</TableCell>
+                        <TableCell align="center">Votes Cast</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -69,6 +71,7 @@ export const VotingResultsTab: React.FC<Props> = ({ accessToken }) => {
                             <TableCell>{index + 1}</TableCell>
                             <TableCell>{result.username}</TableCell>
                             <TableCell align="center">{result.votes}</TableCell>
+                            <TableCell align="center">{result.votesCast}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
