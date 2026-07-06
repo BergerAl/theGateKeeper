@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
 using TheGateKeeper.Server.InfrastructureService;
@@ -22,10 +21,10 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
-        private readonly IMapper _mapper;
+        private readonly DtoMapper _mapper;
         private readonly IWebPushNotificationService _pushService;
         
-        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper, IWebPushNotificationService pushService)
+        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, DtoMapper mapper, IWebPushNotificationService pushService)
         {
             _logger = logger;
             _mapper = mapper;

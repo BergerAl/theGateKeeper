@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using Serilog;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.AppControl;
@@ -39,7 +38,7 @@ builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddSingleton<IAppControl, AppControl>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
-builder.Services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
+builder.Services.AddSingleton<DtoMapper>();
 builder.Services.AddHttpClient();
 #if DEBUG
 builder.Services.AddCors(options =>

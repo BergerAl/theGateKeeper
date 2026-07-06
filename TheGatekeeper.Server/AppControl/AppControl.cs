@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
 using TheGateKeeper.Server.InfrastructureService;
@@ -18,11 +17,11 @@ namespace TheGateKeeper.Server.AppControl
         private readonly ILogger<AppControl> _logger;
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
         private readonly IHubContext<EventHub> _eventHub;
-        private readonly IMapper _mapper;
+        private readonly DtoMapper _mapper;
         private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
         private readonly IWebPushNotificationService _pushService;
 
-        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, IMapper mapper, IWebPushNotificationService pushService)
+        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, DtoMapper mapper, IWebPushNotificationService pushService)
         {
             _logger = logger;
             _eventHub = eventHub;
@@ -36,13 +35,13 @@ namespace TheGateKeeper.Server.AppControl
         public async Task<AppConfigurationDtoV1> GetConfigurationAsync()
         {
             var config = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
-            return _mapper.Map<AppConfigurationDtoV1>(config);
+            return _mapper.ToDto(config);
         }
 
         public async Task<GateKeeperInformationDtoV1> GetGateKeeperInformation()
         {
             var gateKeeperInfo = await _gateKeeperCollection.Find(_ => true).FirstAsync();
-            return _mapper.Map<GateKeeperInformationDtoV1>(gateKeeperInfo);
+            return _mapper.ToDto(gateKeeperInfo);
         }
 
         public async Task UpdateConfigurationAsync(AppConfigurationDtoV1 appConfigurationDto)
@@ -79,7 +78,7 @@ namespace TheGateKeeper.Server.AppControl
             }
             else
             {
-                await _appConfiguration.InsertOneAsync(_mapper.Map<AppConfigurationDaoV1>(appConfigurationDto));
+                await _appConfiguration.InsertOneAsync(_mapper.ToDao(appConfigurationDto));
             }
         }
     }

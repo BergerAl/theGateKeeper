@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
 using System.Text.Json;
 using TheGateKeeper.Server.InfrastructureService;
@@ -7,14 +6,14 @@ using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
-    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper, IWebPushNotificationService pushService) : BackgroundService
+    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, DtoMapper mapper, IWebPushNotificationService pushService) : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
         private readonly ILogger<ScheduledTaskService> _logger = logger;
         private readonly IHubContext<EventHub> _eventHub = eventHub;
-        private readonly IMapper _mapper = mapper;
+        private readonly DtoMapper _mapper = mapper;
         private readonly IWebPushNotificationService _pushService = pushService;
         private string? _appConfigJson;
 
@@ -77,7 +76,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
                     if (appConfig != null)
                     {
-                        var dto = _mapper.Map<AppConfigurationDtoV1>(appConfig);
+                        var dto = _mapper.ToDto(appConfig);
                         var configJson = JsonSerializer.Serialize(dto);
                         if (configJson != _appConfigJson)
                         {

@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
 using TheGateKeeper.Server.RiotsApiService;
@@ -6,7 +5,7 @@ using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
-    public class MatchWatcherService(ILogger<MatchWatcherService> logger, IMongoClient client, IHttpClientFactory httpClientFactory, IHubContext<EventHub> eventHub, IMapper mapper, IRiotApi riotApi, IConfiguration configuration) : BackgroundService
+    public class MatchWatcherService(ILogger<MatchWatcherService> logger, IMongoClient client, IHttpClientFactory httpClientFactory, IHubContext<EventHub> eventHub, DtoMapper mapper, IRiotApi riotApi, IConfiguration configuration) : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
@@ -16,7 +15,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly ILogger<MatchWatcherService> _logger = logger;
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
         private readonly IHubContext<EventHub> _eventHub = eventHub;
-        private readonly IMapper _mapper = mapper;
+        private readonly DtoMapper _mapper = mapper;
         private readonly IRiotApi _riotApi = riotApi;
         private readonly string _matchIdsByPuuidUrl = "https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/";
         private readonly string _matchDetailsUrl = "https://europe.api.riotgames.com/lol/match/v5/matches/";
