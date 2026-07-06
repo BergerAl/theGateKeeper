@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,13 +11,17 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { voteForUser } from '@/store/backEndCalls';
-import { setUserNameSelection } from '@/store/features/baseComponentsSlice';
+import { setUserNameSelection, clearWheelTarget } from '@/store/features/baseComponentsSlice';
 import ResponsiveAppBar from './appBar';
-import { NavigationTab } from '@/store/features/userSlice';
+import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { CurrentVoteStandings } from './currentVoteStandings';
 import { ResultPage } from './resultPage';
 import { ChartComponent } from './chartComponent';
+import { KeycloakUsersTab } from './keycloakUsersTab';
+import { VotingResultsTab } from './userVotingsTab';
+import { SpinWheelModal } from './spinWheelModal';
 import { DisplayedView } from '../../types';
+import { useAuth } from 'react-oidc-context';
 
 export const TheGateKeeper: React.FC = () => {
   const users = useAppSelector(state => state.viewStateSlice.frontEndInfo)
@@ -25,9 +29,28 @@ export const TheGateKeeper: React.FC = () => {
   const gateKeeperName = useAppSelector(state => state.viewStateSlice.gateKeeperInfo.name)
   const userNavigation = useAppSelector(state => state.userSlice.currentNavigation)
   const dispatch = useAppDispatch()
+  const auth = useAuth();
+  const accessToken = auth.user?.access_token;
+  const wheelTarget = useAppSelector(state => state.viewStateSlice.wheelTarget)
+  const currentUsername = auth.user?.profile?.preferred_username as string | undefined
+
+  useEffect(() => {
+    const enabledTabs = appConfig.enabledTabs ?? [];
+    if (enabledTabs.length > 0 && !enabledTabs.includes(userNavigation)) {
+      const firstEnabled = Object.values(NavigationTab).find(tab => enabledTabs.includes(tab));
+      if (firstEnabled) dispatch(setUserNavigation(firstEnabled));
+    }
+  }, [appConfig.enabledTabs]);
+
   return (
     <>
       <ChartComponent />
+      <SpinWheelModal
+        open={!!wheelTarget && wheelTarget === currentUsername}
+        onClose={() => dispatch(clearWheelTarget())}
+        username={wheelTarget ?? ''}
+        accessToken={accessToken}
+      />
       <ResponsiveAppBar />
       {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.LeagueStandings &&
         <TableContainer component={Paper} >
@@ -74,8 +97,12 @@ export const TheGateKeeper: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>}
-      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.VoteStandings &&
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.Results &&
         <CurrentVoteStandings />}
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.KeycloakUsers &&
+        <KeycloakUsersTab accessToken={accessToken} />}
+      {appConfig.displayedView == DisplayedView.DefaultPage && userNavigation == NavigationTab.UserVotings &&
+        <VotingResultsTab accessToken={accessToken} />}
       {/* TODO: Implement result page */}
       {appConfig.displayedView == DisplayedView.ResultsPage &&
         <ResultPage />}

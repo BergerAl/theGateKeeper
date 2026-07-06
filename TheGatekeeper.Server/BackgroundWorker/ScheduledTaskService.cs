@@ -1,19 +1,21 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
+using System.Text.Json;
+using TheGateKeeper.Server.InfrastructureService;
 using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.BackgroundWorker
 {
-    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, IMapper mapper) : BackgroundService
+    public class ScheduledTaskService(ILogger<ScheduledTaskService> logger, IMongoClient client, IHubContext<EventHub> eventHub, DtoMapper mapper, IWebPushNotificationService pushService) : BackgroundService
     {
         private readonly IMongoCollection<PlayerDaoV1> _playersCollection = client.GetDatabase("gateKeeper")
                            .GetCollection<PlayerDaoV1>("players");
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration = client.GetDatabase("gateKeeper").GetCollection<AppConfigurationDaoV1>("appConfiguration");
         private readonly ILogger<ScheduledTaskService> _logger = logger;
         private readonly IHubContext<EventHub> _eventHub = eventHub;
-        private readonly IMapper _mapper = mapper;
-        private AppConfigurationDaoV1? _appConfig;
+        private readonly DtoMapper _mapper = mapper;
+        private readonly IWebPushNotificationService _pushService = pushService;
+        private string? _appConfigJson;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -58,16 +60,35 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     }
 
                     var appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
-                    if (appConfig != _appConfig)
+
+                    // Auto-disable voting when the timer expires
+                    if (appConfig?.VotingEndsAt != null && appConfig.VotingEndsAt <= now && !appConfig.VotingDisabled)
                     {
-                        _appConfig = appConfig;
-                        try
+                        _logger.LogInformation("Voting timer expired, auto-disabling voting.");
+                        var emptyFilter2 = Builders<AppConfigurationDaoV1>.Filter.Empty;
+                        var timerUpdate = Builders<AppConfigurationDaoV1>.Update
+                            .Set(doc => doc.VotingDisabled, true)
+                            .Set(doc => doc.VotingEndsAt, (DateTime?)null);
+                        await _appConfiguration.UpdateOneAsync(emptyFilter2, timerUpdate);
+                        await _pushService.SendNotificationToAllAsync("The GateKeeper", "Voting has ended.");
+                        appConfig = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
+                    }
+
+                    if (appConfig != null)
+                    {
+                        var dto = _mapper.ToDto(appConfig);
+                        var configJson = JsonSerializer.Serialize(dto);
+                        if (configJson != _appConfigJson)
                         {
-                            await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", _mapper.Map<AppConfigurationDtoV1>(appConfig));
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
+                            _appConfigJson = configJson;
+                            try
+                            {
+                                await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", dto);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"Error sending messages to frontend on UpdateConfigurationAsync: {ex.Message}");
+                            }
                         }
                     }
                     _logger.LogInformation($"ScheduledTaskService finished process successfully");

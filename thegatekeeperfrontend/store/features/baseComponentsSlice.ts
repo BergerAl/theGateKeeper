@@ -33,6 +33,7 @@ export interface ViewState {
     gateKeeperInfo: GateKeeperInformationDtoV1
     isDeviceMobile: boolean
     appInfo: GateKeeperAppInfoDtoV1
+    wheelTarget: string | null
 }
 
 export const initialState: ViewState = {
@@ -44,10 +45,11 @@ export const initialState: ViewState = {
     },
     frontEndInfo: [],
     voteStandings: [],
-    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, displayResultsBar: false },
+    appConfiguration: { displayedView: DisplayedView.DefaultPage, votingDisabled: false, votingEndsAt: '', enabledTabs: [], voteBlockCooldownSeconds: 0.5 },
     gateKeeperInfo: { name: '' },
     isDeviceMobile: false,
-    appInfo: { usersOnline: 0 }
+    appInfo: { usersOnline: 0 },
+    wheelTarget: null
 };
 
 
@@ -82,6 +84,12 @@ export const viewStateSlice = createSlice({
         setUserNameSelection: (state, action: PayloadAction<string>) => {
             state.chartView.userName = action.payload;
             state.chartView.visible = true;
+        },
+        setWheelTarget: (state, action: PayloadAction<string>) => {
+            state.wheelTarget = action.payload;
+        },
+        clearWheelTarget: (state) => {
+            state.wheelTarget = null;
         }
     },
     extraReducers(builder) {
@@ -108,7 +116,7 @@ export const viewStateSlice = createSlice({
             state.appConfiguration = action.payload;
         });
         builder.addCase(fetchConfiguration.rejected, (state, action) => {
-            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, displayResultsBar: false };
+            state.appConfiguration = { displayedView: DisplayedView.DefaultPage, votingDisabled: true, votingEndsAt: '', enabledTabs: [], voteBlockCooldownSeconds: 0.5 };
         });
         builder.addCase(updateConfiguration.fulfilled, (state, action) => {
             state.appConfiguration = action.meta.arg.appConfig;
@@ -132,7 +140,9 @@ export const {
     setIsMobileDevice,
     setUsersOnline,
     closeChartView,
-    setUserNameSelection
+    setUserNameSelection,
+    setWheelTarget,
+    clearWheelTarget
 } = viewStateSlice.actions;
 
 export default viewStateSlice.reducer;

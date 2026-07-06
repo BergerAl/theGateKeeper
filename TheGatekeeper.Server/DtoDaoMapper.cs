@@ -1,30 +1,16 @@
-using AutoMapper;
+using Riok.Mapperly.Abstractions;
 using TheGateKeeper.Server;
 using TheGatekeeper.Contracts;
 
-public class MappingProfile : Profile
+[Mapper]
+public partial class DtoMapper
 {
-    public MappingProfile()
-    {
-        CreateMap<VotingDaoV1, VotingDtoV1>()
-            .ForMember(dest => dest.isBlocked, opt => opt.MapFrom(src => src.isBlocked))
-            .ForMember(dest => dest.voteBlockedUntil, opt => opt.MapFrom(src => src.voteBlockedUntil));
+    public partial VotingDtoV1 ToDto(VotingDaoV1 source);
 
-        CreateMap<VotingDtoV1, VotingDaoV1>()
-            .ForMember(dest => dest.countAmount, opt => opt.UseDestinationValue());
+    public partial AppConfigurationDtoV1 ToDto(AppConfigurationDaoV1 source);
 
-        CreateMap<AppConfigurationDaoV1, AppConfigurationDtoV1>()
-            .ForMember(dest => dest.DisplayedView, opt => opt.MapFrom(src => src.DisplayedView))
-            .ForMember(dest => dest.VotingDisabled, opt => opt.MapFrom(src => src.VotingDisabled))
-            .ForMember(dest => dest.DisplayResultsBar, opt => opt.MapFrom(src => src.DisplayResultsBar));
+    [MapperIgnoreTarget(nameof(AppConfigurationDaoV1.Id))]
+    public partial AppConfigurationDaoV1 ToDao(AppConfigurationDtoV1 source);
 
-        CreateMap<AppConfigurationDtoV1, AppConfigurationDaoV1>()
-            .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());
-
-        CreateMap<GateKeeperInformationDaoV1, GateKeeperInformationDtoV1>()
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
-
-        CreateMap<GateKeeperInformationDtoV1, GateKeeperInformationDaoV1>()
-            .ForMember(dest => dest.Id, opt => opt.UseDestinationValue());
-    }
+    public partial GateKeeperInformationDtoV1 ToDto(GateKeeperInformationDaoV1 source);
 }

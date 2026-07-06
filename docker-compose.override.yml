@@ -1,6 +1,10 @@
 # Automatically applied on top of docker-compose.yml during local development.
 # This file should NOT be copied to the Raspberry Pi / production.
 services:
+  the-gate-keeper:
+    environment:
+      Keycloak__auth-server-url: http://keycloak:8080
+
   keycloak:
     environment:
       KC_HOSTNAME: http://localhost:8892

@@ -50,7 +50,9 @@ namespace TheGateKeeper.Server
         [BsonRepresentation(BsonType.String)]
         public DisplayedView DisplayedView { get; set; }
         public bool VotingDisabled { get; set; }
-        public bool DisplayResultsBar { get; set; }
+        public DateTime? VotingEndsAt { get; set; }
+        public double VoteBlockCooldownSeconds { get; set; } = 0.5;
+        public List<string> EnabledTabs { get; set; } = ["LeagueStandings", "Results", "Users", "UserVotings"];
     }
 
     [BsonIgnoreExtraElements]
@@ -74,6 +76,19 @@ namespace TheGateKeeper.Server
         [JsonPropertyName("userName")]
         public string UserName { get; set; } = "";
         public List<RankTimeLineDaoV1> RankTimeLine { get; set; } = [];
+    }
+
+    [BsonIgnoreExtraElements]
+    public class KeycloakUserVoteDaoV1
+    {
+        [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
+        [BsonRepresentation(BsonType.String)]
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+        public double VoteCount { get; set; } = 0;
+        public double VotesCast { get; set; } = 0;
+        public bool IsBlocked { get; set; } = false;
+        public DateTime VoteBlockedUntil { get; set; } = DateTime.MinValue;
     }
 
     [BsonIgnoreExtraElements]
@@ -121,5 +136,25 @@ namespace TheGateKeeper.Server
         [BsonId]
         public int ItemId { get; set; }
         public string Name { get; set; } = "";
+    }
+
+    [BsonIgnoreExtraElements]
+    public class PushSubscriptionDaoV1
+    {
+        [BsonId]
+        public string UserId { get; set; } = ""; // Keycloak sub claim — also serves as _id
+        public string Endpoint { get; set; } = "";
+        public string P256DH { get; set; } = "";
+        public string Auth { get; set; } = "";
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    [BsonIgnoreExtraElements]
+    public class WheelConfigDaoV1
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Id { get; set; }
+        public List<string> Options { get; set; } = [];
     }
 }

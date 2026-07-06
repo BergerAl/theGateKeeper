@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using TheGatekeeper.Contracts;
 
@@ -35,13 +34,13 @@ namespace TheGateKeeper.Server
                 customRankRank.ContainsKey(x.rank) ? customRankRank[x.rank] : int.MaxValue).ThenByDescending(x => x.leaguePoints).ToList();
         }
 
-        public static async Task<IEnumerable<FrontEndInfoDtoV1>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection, IMapper mapper, ILogger logger)
+        public static async Task<IEnumerable<FrontEndInfoDtoV1>> GetAllRanksFromCollection(this IMongoCollection<PlayerDaoV1> collection, DtoMapper mapper, ILogger logger)
         {       
             var players = await collection.Find(_ => true).ToListAsync();
             return players.PlayerToFrontEndInfo(mapper, logger).SortUsers();
         }
 
-        public static IEnumerable<FrontEndInfoDtoV1> PlayerToFrontEndInfo(this List<PlayerDaoV1> players, IMapper mapper, ILogger logger)
+        public static IEnumerable<FrontEndInfoDtoV1> PlayerToFrontEndInfo(this List<PlayerDaoV1> players, DtoMapper mapper, ILogger logger)
         {
             try {
                 var responseList = new List<FrontEndInfoDtoV1>();
@@ -58,7 +57,7 @@ namespace TheGateKeeper.Server
                             rank = "Loves his wood",
                             tier = "UNRANKED",
                             playedGames = 0,
-                            voting = mapper.Map<VotingDtoV1>(player.Voting)
+                            voting = mapper.ToDto(player.Voting)
                         };
                         responseList.Add(defaultFrontEndInfo);
                         continue;
@@ -70,7 +69,7 @@ namespace TheGateKeeper.Server
                         rank = element.rank,
                         tier = element.tier,
                         playedGames = element.wins + element.losses,
-                        voting = mapper.Map<VotingDtoV1>(player.Voting)
+                        voting = mapper.ToDto(player.Voting)
                     };
                     responseList.Add(frontEndInfo);
                 }

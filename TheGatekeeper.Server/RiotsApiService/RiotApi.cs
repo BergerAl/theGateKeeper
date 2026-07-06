@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using System.Text.RegularExpressions;
 using TheGatekeeper.Contracts;
 
@@ -11,13 +10,13 @@ namespace TheGateKeeper.Server.RiotsApiService
         private readonly IMongoCollection<PlayerDaoV1> _collection;
         private readonly IMongoCollection<RankTimeLineEntryDaoV1> _rankTimeLineCollection;
         private string _apiKey;
-        private readonly IMapper _mapper;
+        private readonly DtoMapper _mapper;
         private static readonly Regex ApiKeyPattern = new Regex(
             @"^RGAPI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
         );
 
-        public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration, IMapper mapper) {
+        public RiotApi(IMongoClient mongoClient, ILogger<RiotApi> logger, IConfiguration configuration, DtoMapper mapper) {
             var database = mongoClient.GetDatabase("gateKeeper");
             _collection = database.GetCollection<PlayerDaoV1>("players");
             _rankTimeLineCollection = database.GetCollection<RankTimeLineEntryDaoV1>("ranktimeline");

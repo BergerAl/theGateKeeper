@@ -23,13 +23,7 @@ namespace TheGateKeeper.Server.VotingService
         {
             try
             {
-#if !DEBUG
-                var config = await _appControl.GetConfigurationAsync();
-                if (!config.DisplayResultsBar)
-                {
-                    return [];
-                }
-#endif
+
                 var allPlayers = await _collection.Find(_ => true).ToListAsync();
                 var pipeline = new BsonDocument[] {
                     new BsonDocument("$project", new BsonDocument

@@ -10,6 +10,12 @@ import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import CircularProgress from '@mui/material/CircularProgress';
+import DownloadIcon from '@mui/icons-material/Download';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { NavigationTab, setUserNavigation } from '@/store/features/userSlice';
 import { domainUrlPrefix } from '@/store/backEndCalls';
@@ -17,14 +23,31 @@ import { Tooltip } from '@mui/material';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import { translateUsersOnline } from '../common/common';
 import { useAuth } from 'react-oidc-context';
+import { usePushNotifications } from '../common/usePushNotifications';
 
 function ResponsiveAppBar() {
     const dispatch = useAppDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
-    const resultsPageEnabled = useAppSelector(state => state.viewStateSlice.appConfiguration.displayResultsBar);
     const usersOnline = useAppSelector(state => state.viewStateSlice.appInfo.usersOnline)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const auth = useAuth();
+    const accessToken = auth.user?.access_token;
+    const { isSubscribed, isLoading: pushLoading, error: pushError, subscribe, unsubscribe } = usePushNotifications(accessToken);
+    const [pushErrorOpen, setPushErrorOpen] = React.useState(false);
+    const [installPrompt, setInstallPrompt] = React.useState<Event & { prompt: () => Promise<void> } | null>(null);
+
+    React.useEffect(() => {
+        const handler = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e as Event & { prompt: () => Promise<void> });
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    React.useEffect(() => {
+        if (pushError) setPushErrorOpen(true);
+    }, [pushError]);
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElNav(event.currentTarget);
@@ -50,8 +73,13 @@ function ResponsiveAppBar() {
         setAnchorEl(null);
     };
 
-    const navigationOptions = Object.values(NavigationTab).filter(value => value !== NavigationTab.VoteStandings || resultsPageEnabled)
+    const enabledTabs = useAppSelector(state => state.viewStateSlice.appConfiguration.enabledTabs);
+
+    const navigationOptions = Object.values(NavigationTab).filter(value => {
+        return enabledTabs.includes(value);
+    });
     return (
+        <>
         <AppBar position="static">
             <Container style={{ maxWidth: '100%' }}>
                 <Toolbar disableGutters>
@@ -167,9 +195,31 @@ function ResponsiveAppBar() {
                             </Button>
                         ))}
                     </Box>
+                    {/* Notification Bell — visible only when logged in */}
+                    {auth.isAuthenticated && (
+                        <Tooltip title={pushError ?? (isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications')}>
+                            <span>
+                                <IconButton
+                                    size="large"
+                                    color="inherit"
+                                    onClick={isSubscribed ? unsubscribe : subscribe}
+                                    disabled={pushLoading}
+                                    aria-label={isSubscribed ? 'unsubscribe notifications' : 'subscribe notifications'}
+                                >
+                                    {pushLoading
+                                        ? <CircularProgress size={24} color="inherit" />
+                                        : isSubscribed
+                                            ? <NotificationsIcon />
+                                            : <NotificationsOffIcon />}
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    )}
                     {/* User Button */}
                     <Box sx={{ flexGrow: 0 }}>
-                        {auth && (
+                        {auth.isLoading ? (
+                            <CircularProgress size={28} color="inherit" sx={{ mx: 1 }} />
+                        ) : (
                             <div>
                                 <IconButton
                                     size="large"
@@ -198,18 +248,39 @@ function ResponsiveAppBar() {
                                     onClose={handleClose}
                                 >
                                     {auth.isAuthenticated ? (
-                                        <MenuItem onClick={() => auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin })}>Logout</MenuItem>
+                                        <span>
+                                            {installPrompt && (
+                                                <MenuItem onClick={() => {
+                                                    installPrompt.prompt();
+                                                    setInstallPrompt(null);
+                                                    handleClose();
+                                                }}>
+                                                    <DownloadIcon fontSize="small" sx={{ mr: 1 }} />Install app
+                                                </MenuItem>
+                                            )}
+                                            <MenuItem onClick={() => auth.signoutRedirect({ post_logout_redirect_uri: window.location.origin })}>Logout</MenuItem>
+                                        </span>
                                     ) : (
                                         <MenuItem onClick={() => auth.signinRedirect()}>Login</MenuItem>
                                     )}
                                 </Menu>
                             </div>
                         )}
-
                     </Box>
                 </Toolbar>
             </Container>
         </AppBar>
+        <Snackbar
+            open={pushErrorOpen}
+            autoHideDuration={6000}
+            onClose={() => setPushErrorOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+            <Alert severity="error" onClose={() => setPushErrorOpen(false)}>
+                {pushError}
+            </Alert>
+        </Snackbar>
+        </>
     );
 }
 export default ResponsiveAppBar;

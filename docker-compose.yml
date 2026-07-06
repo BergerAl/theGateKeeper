@@ -43,6 +43,11 @@ services:
       - mongoDbUser
       - mongoDbPassword
       - discordWebhook
+      - vapid_public_key
+      - vapid_private_key
+      - vapid_subject
+      - keycloak_admin
+      - keycloak_admin_password
     ports:
       - "8891:80"
       # - "8891:8890"
@@ -108,6 +113,12 @@ secrets:
     file: ./secrets/keycloak_admin
   keycloak_admin_password:
     file: ./secrets/keycloak_admin_password
+  vapid_public_key:
+    file: ./secrets/vapid_public_key
+  vapid_private_key:
+    file: ./secrets/vapid_private_key
+  vapid_subject:
+    file: ./secrets/vapid_subject
 
 networks:
   my-network:

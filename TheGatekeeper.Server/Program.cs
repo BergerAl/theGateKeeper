@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using Serilog;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using TheGateKeeper.Server;
 using TheGateKeeper.Server.AppControl;
@@ -14,16 +13,17 @@ using TheGateKeeper.Server.ConnectionManager;
 using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGateKeeper.Server.VotingService;
+using TheGateKeeper.Server.WheelService;
 using TheGateKeeper.Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddDockerSecrets();
 
+#if DEBUG
 builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false);
 
-#if DEBUG
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", 
     optional: true);
 #endif
@@ -38,7 +38,7 @@ builder.Services.AddSingleton<IRiotApi, RiotApi>();
 builder.Services.AddSingleton<IVotingService, VotingService>();
 builder.Services.AddSingleton<IAppControl, AppControl>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddSingleton<DtoMapper>();
 builder.Services.AddHttpClient();
 #if DEBUG
 builder.Services.AddCors(options =>
@@ -73,11 +73,15 @@ builder.Services.Configure<HostOptions>(hostOptions =>
 {
     hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
 });
+builder.Services.AddSingleton<IWebPushNotificationService, WebPushNotificationService>();
+builder.Services.AddSingleton<IWheelService, WheelService>();
 builder.Services.AddHostedService<StartUpService>();
-// builder.Services.AddHostedService<ItemSeedService>();
-// builder.Services.AddHostedService<BackgroundWorker>();
-// builder.Services.AddHostedService<ScheduledTaskService>();
-// builder.Services.AddHostedService<MatchWatcherService>();
+#if !DEBUG
+builder.Services.AddHostedService<ItemSeedService>();
+builder.Services.AddHostedService<BackgroundWorker>();
+builder.Services.AddHostedService<ScheduledTaskService>();
+builder.Services.AddHostedService<MatchWatcherService>();
+#endif
 builder.Services.AddSignalR();
 
 builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
@@ -122,5 +126,8 @@ app.UseAuthorization();
 // Map endpoints instead of controllers
 app.MapRiotApiEndpoints();
 app.MapAppConfigurationEndpoints();
+app.MapNotificationEndpoints();
+app.MapKeycloakEndpoints();
+app.MapWheelEndpoints();
 
 app.Run();

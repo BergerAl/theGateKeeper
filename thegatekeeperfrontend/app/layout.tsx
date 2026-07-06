@@ -14,6 +14,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "The GateKeeper",
   manifest: "/manifest.json",
+  description: "Track League of Legends standings, voting, and live game data for your group.",
+  openGraph: {
+    title: "The GateKeeper",
+    description: "Track League of Legends standings, voting, and live game data for your group.",
+    url: "https://bergeral.me",
+  },
 };
 
 export default function RootLayout({

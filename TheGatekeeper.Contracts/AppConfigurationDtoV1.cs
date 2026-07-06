@@ -13,6 +13,12 @@ public class AppConfigurationDtoV1
     [JsonPropertyName("votingDisabled")]
     public bool VotingDisabled { get; set; }
 
-    [JsonPropertyName("displayResultsBar")]
-    public bool DisplayResultsBar { get; set; }
+    [JsonPropertyName("votingEndsAt")]
+    public DateTime? VotingEndsAt { get; set; }
+
+    [JsonPropertyName("voteBlockCooldownSeconds")]
+    public double VoteBlockCooldownSeconds { get; set; } = 0.5;
+
+    [JsonPropertyName("enabledTabs")]
+    public List<string> EnabledTabs { get; set; } = ["LeagueStandings", "Results", "Users", "UserVotings"];
 }

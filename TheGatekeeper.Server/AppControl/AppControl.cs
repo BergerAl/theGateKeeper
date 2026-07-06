@@ -1,6 +1,6 @@
-using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MongoDB.Driver;
+using TheGateKeeper.Server.InfrastructureService;
 using TheGatekeeper.Contracts;
 
 namespace TheGateKeeper.Server.AppControl
@@ -17,14 +17,16 @@ namespace TheGateKeeper.Server.AppControl
         private readonly ILogger<AppControl> _logger;
         private readonly IMongoCollection<AppConfigurationDaoV1> _appConfiguration;
         private readonly IHubContext<EventHub> _eventHub;
-        private readonly IMapper _mapper;
+        private readonly DtoMapper _mapper;
         private readonly IMongoCollection<GateKeeperInformationDaoV1> _gateKeeperCollection;
+        private readonly IWebPushNotificationService _pushService;
 
-        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, IMapper mapper)
+        public AppControl(ILogger<AppControl> logger, IMongoClient mongoClient, IHubContext<EventHub> eventHub, DtoMapper mapper, IWebPushNotificationService pushService)
         {
             _logger = logger;
             _eventHub = eventHub;
             _mapper = mapper;
+            _pushService = pushService;
             var database = mongoClient.GetDatabase("gateKeeper");
             _appConfiguration = database.GetCollection<AppConfigurationDaoV1>("appConfiguration");
             _gateKeeperCollection = database.GetCollection<GateKeeperInformationDaoV1>("gateKeeperInfo");
@@ -33,13 +35,13 @@ namespace TheGateKeeper.Server.AppControl
         public async Task<AppConfigurationDtoV1> GetConfigurationAsync()
         {
             var config = await _appConfiguration.Find(_ => true).FirstOrDefaultAsync();
-            return _mapper.Map<AppConfigurationDtoV1>(config);
+            return _mapper.ToDto(config);
         }
 
         public async Task<GateKeeperInformationDtoV1> GetGateKeeperInformation()
         {
             var gateKeeperInfo = await _gateKeeperCollection.Find(_ => true).FirstAsync();
-            return _mapper.Map<GateKeeperInformationDtoV1>(gateKeeperInfo);
+            return _mapper.ToDto(gateKeeperInfo);
         }
 
         public async Task UpdateConfigurationAsync(AppConfigurationDtoV1 appConfigurationDto)
@@ -52,9 +54,18 @@ namespace TheGateKeeper.Server.AppControl
                 var update = Builders<AppConfigurationDaoV1>.Update
                     .Set(doc => doc.DisplayedView, appConfigurationDto.DisplayedView)
                     .Set(doc => doc.VotingDisabled, appConfigurationDto.VotingDisabled)
-                    .Set(doc => doc.DisplayResultsBar, appConfigurationDto.DisplayResultsBar);
+                    .Set(doc => doc.VotingEndsAt, appConfigurationDto.VotingEndsAt)
+                    .Set(doc => doc.VoteBlockCooldownSeconds, appConfigurationDto.VoteBlockCooldownSeconds)
+                    .Set(doc => doc.EnabledTabs, appConfigurationDto.EnabledTabs);
                 await _appConfiguration.UpdateOneAsync(emptyFilter, update);
                 _logger.LogDebug($"Updated app configuration.");
+
+                // Notify subscribers when voting state changes
+                if (existingConfig.VotingDisabled && !appConfigurationDto.VotingDisabled)
+                    await _pushService.SendNotificationToAllAsync("The GateKeeper", "Voting has started! Cast your vote now.");
+                else if (!existingConfig.VotingDisabled && appConfigurationDto.VotingDisabled)
+                    await _pushService.SendNotificationToAllAsync("The GateKeeper", "Voting has ended.");
+
                 try
                 {
                     await _eventHub.Clients.All.SendAsync("UpdateConfigurationView", appConfigurationDto);
@@ -67,7 +78,7 @@ namespace TheGateKeeper.Server.AppControl
             }
             else
             {
-                await _appConfiguration.InsertOneAsync(_mapper.Map<AppConfigurationDaoV1>(appConfigurationDto));
+                await _appConfiguration.InsertOneAsync(_mapper.ToDao(appConfigurationDto));
             }
         }
     }

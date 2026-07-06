@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using System.Text;
 using System.Text.Json;
+using TheGateKeeper.Server.InfrastructureService;
 using TheGateKeeper.Server.RiotsApiService;
 using TheGatekeeper.Contracts;
 
@@ -21,9 +21,10 @@ namespace TheGateKeeper.Server.BackgroundWorker
         private readonly string riotSpectatorId = "https://euw1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/";
         private readonly IRiotApi _riotApi;
         private readonly string _webhookUrl;
-        private readonly IMapper _mapper;
+        private readonly DtoMapper _mapper;
+        private readonly IWebPushNotificationService _pushService;
         
-        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, IMapper mapper)
+        public BackgroundWorker(ILogger<BackgroundWorker> logger, IMongoClient mongoClient, IHttpClientFactory httpClientFactory, IConfiguration configuration, IRiotApi riotApi, DtoMapper mapper, IWebPushNotificationService pushService)
         {
             _logger = logger;
             _mapper = mapper;
@@ -35,6 +36,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
             _historyCollection = database.GetCollection<RankTimeLineEntryDaoV1>("ranktimeline");
             _riotApi = riotApi;
             _webhookUrl = SecretsHelper.GetSecret(configuration, "discordWebhook");
+            _pushService = pushService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -190,7 +192,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError($"Error during reading of account information: {errorResponse?.Status.message}");
                     return new AccountDtoV1();
                 }
-                return await response.Content.ReadFromJsonAsync<AccountDtoV1>().ConfigureAwait(false);
+                return await response.Content.ReadFromJsonAsync<AccountDtoV1>().ConfigureAwait(false) ?? new AccountDtoV1();
             }
             catch (Exception e)
             {
@@ -212,7 +214,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
                     _logger.LogError($"Error during reading of summoner info with following error: {errorResponse?.Status.message}");
                     return new SummonerDtoV1();
                 }
-                return await response.Content.ReadFromJsonAsync<SummonerDtoV1>().ConfigureAwait(false);
+                return await response.Content.ReadFromJsonAsync<SummonerDtoV1>().ConfigureAwait(false) ?? new SummonerDtoV1();
             }
             catch (Exception e)
             {
@@ -311,9 +313,7 @@ namespace TheGateKeeper.Server.BackgroundWorker
 
         private async Task NotifyDiscord(List<(int OriginalIndex, int NewIndex, StandingsDtoV1 Item)> swappedPlayers, CancellationToken stoppingToken)
         {
-#if DEBUG
-            return;
-#endif
+#if !DEBUG
             var returnMessage = "";
             foreach (var (OriginalIndex, NewIndex, Item) in swappedPlayers)
             {
@@ -329,13 +329,14 @@ namespace TheGateKeeper.Server.BackgroundWorker
             var contentData = new StringContent(json, Encoding.UTF8, "application/json");
 
             await _httpClient.PostAsync(_webhookUrl, contentData, stoppingToken);
+#else
+            await Task.CompletedTask;
+#endif
         }
 
         private async Task NotifyDiscordGateKeeperPlaying(CancellationToken stoppingToken)
         {
-#if DEBUG
-            return;
-#endif
+#if !DEBUG
             try
             {
                 var emptyFilter = Builders<GateKeeperInformationDaoV1>.Filter.Empty;
@@ -374,7 +375,9 @@ namespace TheGateKeeper.Server.BackgroundWorker
                 _logger.LogError($"Error during sending of discord message. Exception {ex}");
                 throw;
             }
-
+#else
+            await Task.CompletedTask;
+#endif
         }
 
         private static int GetCombinedPoints(string tier, string rank, int leaguePoints)
