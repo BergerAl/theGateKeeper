@@ -34,6 +34,7 @@
     "react-custom-roulette": {
       "react": "$react",
       "react-dom": "$react-dom"
-    }
+    },
+    "postcss": "^8.5.16"
   }
 }
